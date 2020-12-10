@@ -1,0 +1,7 @@
+## This file is auto-generated, do not modify ##
+resources:
+- eno_v1alpha1_l2serviceattachment.yaml
+- eno_v1alpha1_connectionpoint.yaml
+- eno_v1alpha1_l2service.yaml
+- eno_v1alpha1_subnet.yaml
+- eno_v1alpha1_route.yaml
