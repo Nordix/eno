@@ -18,13 +18,14 @@ package controllers
 
 import (
 	"context"
-
+	"k8s.io/apimachinery/pkg/types"
+        "k8s.io/apimachinery/pkg/api/errors"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	enov1alpha1 "github.com/externalnetworkoperator/eno/api/v1alpha1"
+	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
         nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 )
 
@@ -39,8 +40,8 @@ type L2ServiceAttachmentReconciler struct {
 // +kubebuilder:rbac:groups=eno.k8s.io,resources=l2serviceattachments/status,verbs=get;update;patch
 
 func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx = context.Background()
-	log = r.Log.WithValues("l2serviceattachment", req.NamespacedName)
+	ctx := context.Background()
+	log := r.Log.WithValues("l2serviceattachment", req.NamespacedName)
 
 	// Fetch the L2ServiceAttachment instance
 	svc_att := &enov1alpha1.L2ServiceAttachment{}
@@ -62,14 +63,17 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
         err = r.Get(ctx, types.NamespacedName{Name: svc_att.Name, Namespace: svc_att.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new NetAttachDef
-		net_att_def := r.defineNetAttachDef(svc_att)
-		log.Info("Creating a new NetAttachDef", "NetAttachDef.Namespace", net_att_def.Namespace, "NetAttachDef.Name", net_att_def.Name)
-		err = r.Create(ctx, net_att_def)
+		net_att_def, err := r.defineNetAttachDef(svc_att)
 		if err != nil {
-			log.Error(err, "Failed to create new NetAttachDef", "NetAttachDef.Namespace", net_att_def.Namespace,
-                            "NetAttachDef.Name", net_att_def.Name,)
-			return ctrl.Result{}, err
+		    return ctrl.Result{}, err
 		}
+		//log.Info("Creating a new NetAttachDef", "NetAttachDef.Namespace", net_att_def.Namespace, "NetAttachDef.Name", net_att_def.Name)
+		//err = r.Create(ctx, net_att_def)
+		//if err != nil {
+		//	log.Error(err, "Failed to create new NetAttachDef", "NetAttachDef.Namespace", net_att_def.Namespace,
+                //            "NetAttachDef.Name", net_att_def.Name,)
+		//	return ctrl.Result{}, err
+		//}
 		// NetAttachDef created successfully - return
 		return ctrl.Result{}, nil
 	} else if err != nil {
@@ -82,11 +86,43 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	return ctrl.Result{}, nil
 }
 
-func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(s *enov1alpha1.L2ServiceAttachment{}) *nettypes.NetworkAttachmentDefinition {
-
+func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(s *enov1alpha1.L2ServiceAttachment) (*nettypes.NetworkAttachmentDefinition, error) {
 	cp_name := s.Spec.ConnectionPoint
+	l2srv_list := s.Spec.L2Services
+	vlan_type := s.Spec.VlanType
+
         cp := &enov1alpha1.ConnectionPoint{}
-        err = r.Get(ctx, types.NamespacedName{Name: cp_name, Namespace: s.Namespace}, cp)
+	if err := r.Get(ctx, types.NamespacedName{Name: cp_name}, cp); err != nil{
+	    log.Error(err, "Failed to find ConnectionPoint", "ConnectionPoint.Name", cp_name)
+	    return nil, err
+	}
+
+	net_obj := ""
+        if *cp.Spec.Type == "kernel" {
+            net_obj = *cp.Spec.InterfaceName
+        }
+        else {
+            net_obj = *cp.Spec.ResourceName
+        }
+
+        seg_id_list := []uint16{}
+	switch vlan_type {
+	case "access":
+	    if len(l2srv_list) != 1 {
+                log.Error("L2Services cannot contain more than one L2Services in VlanType=access case")
+		err := errors.Error("Cannot use more than one L2Services for VlanType=access case")
+		return nil, err
+	    }
+
+	    l2srv_name := l2srv_list[0]
+	    l2srv := &enov1alpha1.L2Service{}
+	    if err := r.Get(ctx, types.NamespacedName{Name: l2srv_name}, l2srv); err != nil{
+                log.Error(err, "Failed to find L2Service", "L2Service.Name", l2srv_name)
+                return nil, err
+            }
+	    seg_id_list = append(seg_id_list, *l2srv.Spec.SegmentationID)
+	}
+
         log.Info("AUTO ",cp)
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{

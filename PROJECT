@@ -1,6 +1,6 @@
 domain: k8s.io
 layout: go.kubebuilder.io/v2
-repo: github.com/externalnetworkoperator/eno
+repo: github.com/Nordix/eno
 resources:
 - group: eno
   kind: L2ServiceAttachment

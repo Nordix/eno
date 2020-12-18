@@ -41,6 +41,7 @@ type RouteStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=routes,scope=Cluster
 
 // Route is the Schema for the routes API
 type Route struct {

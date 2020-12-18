@@ -44,6 +44,7 @@ type ConnectionPointStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=connectionpoints,scope=Cluster
 
 // ConnectionPoint is the Schema for the connectionpoints API
 type ConnectionPoint struct {

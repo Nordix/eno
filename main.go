@@ -27,8 +27,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	enov1alpha1 "github.com/externalnetworkoperator/eno/api/v1alpha1"
-	"github.com/externalnetworkoperator/eno/controllers"
+	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
+	"github.com/Nordix/eno/controllers"
 	// +kubebuilder:scaffold:imports
 )
 

@@ -14,7 +14,7 @@ spec:
     listKind: ConnectionPointList
     plural: connectionpoints
     singular: connectionpoint
-  scope: Namespaced
+  scope: Cluster
   subresources:
     status: {}
   validation:

@@ -44,6 +44,7 @@ type SubnetStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=subnets,scope=Cluster
 
 // Subnet is the Schema for the subnets API
 type Subnet struct {

@@ -14,7 +14,7 @@ spec:
     listKind: L2ServiceList
     plural: l2services
     singular: l2service
-  scope: Namespaced
+  scope: Cluster
   subresources:
     status: {}
   validation:

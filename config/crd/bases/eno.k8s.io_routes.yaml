@@ -14,7 +14,7 @@ spec:
     listKind: RouteList
     plural: routes
     singular: route
-  scope: Namespaced
+  scope: Cluster
   subresources:
     status: {}
   validation:

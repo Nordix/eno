@@ -30,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	enov1alpha1 "github.com/externalnetworkoperator/eno/api/v1alpha1"
+	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

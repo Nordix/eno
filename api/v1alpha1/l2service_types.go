@@ -44,6 +44,7 @@ type L2ServiceStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=l2services,scope=Cluster
 
 // L2Service is the Schema for the l2services API
 type L2Service struct {
