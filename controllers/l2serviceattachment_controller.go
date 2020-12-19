@@ -18,13 +18,17 @@ package controllers
 
 import (
 	"context"
+	"path/filepath"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/types"
-        "k8s.io/apimachinery/pkg/api/errors"
+        apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/Nordix/eno/render"
 
+	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
         nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 )
@@ -47,7 +51,7 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	svc_att := &enov1alpha1.L2ServiceAttachment{}
 	err := r.Get(ctx, req.NamespacedName, svc_att)
         if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -61,9 +65,9 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
         // Check if the NetAttachDef already exists, if not create a new one
 	found := &nettypes.NetworkAttachmentDefinition{}
         err = r.Get(ctx, types.NamespacedName{Name: svc_att.Name, Namespace: svc_att.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new NetAttachDef
-		net_att_def, err := r.defineNetAttachDef(svc_att)
+		_, err := r.defineNetAttachDef(ctx, log, svc_att)
 		if err != nil {
 		    return ctrl.Result{}, err
 		}
@@ -76,7 +80,8 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		//}
 		// NetAttachDef created successfully - return
 		return ctrl.Result{}, nil
-	} else if err != nil {
+	}
+	if err != nil {
 		log.Error(err, "Failed to get NetAttachDef")
 		return ctrl.Result{}, err
 	}
@@ -86,7 +91,11 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	return ctrl.Result{}, nil
 }
 
-func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(s *enov1alpha1.L2ServiceAttachment) (*nettypes.NetworkAttachmentDefinition, error) {
+func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(ctx context.Context, log logr.Logger, s *enov1alpha1.L2ServiceAttachment) (*nettypes.NetworkAttachmentDefinition, error) {
+
+	objs := []*uns.Unstructured{}
+	data := render.MakeRenderData()
+
 	cp_name := s.Spec.ConnectionPoint
 	l2srv_list := s.Spec.L2Services
 	vlan_type := s.Spec.VlanType
@@ -98,19 +107,18 @@ func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(s *enov1alpha1.L2Serv
 	}
 
 	net_obj := ""
-        if *cp.Spec.Type == "kernel" {
-            net_obj = *cp.Spec.InterfaceName
-        }
-        else {
-            net_obj = *cp.Spec.ResourceName
+        if cp.Spec.Type == "kernel" {
+            net_obj = cp.Spec.InterfaceName
+        } else {
+            net_obj = cp.Spec.ResourceName
         }
 
         seg_id_list := []uint16{}
 	switch vlan_type {
 	case "access":
 	    if len(l2srv_list) != 1 {
-                log.Error("L2Services cannot contain more than one L2Services in VlanType=access case")
-		err := errors.Error("Cannot use more than one L2Services for VlanType=access case")
+		err := errors.Errorf("Cannot use more than one L2Services for VlanType=access case")
+		log.Error(err,"L2Services cannot contain more than one L2Services in VlanType=access case")
 		return nil, err
 	    }
 
@@ -120,41 +128,19 @@ func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(s *enov1alpha1.L2Serv
                 log.Error(err, "Failed to find L2Service", "L2Service.Name", l2srv_name)
                 return nil, err
             }
-	    seg_id_list = append(seg_id_list, *l2srv.Spec.SegmentationID)
-	}
+	    seg_id_list = append(seg_id_list, l2srv.Spec.SegmentationID)
+        }
 
-        log.Info("AUTO ",cp)
-	dep := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      m.Name,
-			Namespace: m.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: ls,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: ls,
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{
-						Image:   "memcached:1.4.36-alpine",
-						Name:    "memcached",
-						Command: []string{"memcached", "-m=64", "-o", "modern", "-v"},
-						Ports: []corev1.ContainerPort{{
-							ContainerPort: 11211,
-							Name:          "memcached",
-						}},
-					}},
-				},
-			},
-		},
-	}
-	// Set Memcached instance as the owner and controller
-	ctrl.SetControllerReference(m, dep, r.Scheme)
-	return dep
+	data.Data["NetAttachDefName"] = s.Name
+	data.Data["NetAttachDefNamespace"] = s.Namespace
+	data.Data["InterfaceName"] = net_obj
+	data.Data["AccessVlan"] = seg_id_list[0]
+
+	objs, err := render.RenderDir(filepath.Join("../manifests", "ovs_netattachdef"), &data)
+        log.Info("Dimitris", objs)
+	//ctrl.SetControllerReference(m, dep, r.Scheme)
+	//return dep
+	return nil, err
 }
 
 func (r *L2ServiceAttachmentReconciler) SetupWithManager(mgr ctrl.Manager) error {
