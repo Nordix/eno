@@ -28,9 +28,9 @@ type RouteSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-        Prefix string `json:"Prefix"`
-        Mask uint8 `json:"Mask"`
-        NextHop string `json:"NextHop"`
+	Prefix  string `json:"Prefix"`
+	Mask    uint8  `json:"Mask"`
+	NextHop string `json:"NextHop"`
 }
 
 // RouteStatus defines the observed state of Route

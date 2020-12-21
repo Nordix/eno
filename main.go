@@ -29,6 +29,7 @@ import (
 
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/Nordix/eno/controllers"
+	nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -41,6 +42,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(enov1alpha1.AddToScheme(scheme))
+	utilruntime.Must(nettypes.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
