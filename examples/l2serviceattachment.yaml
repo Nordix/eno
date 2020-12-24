@@ -1,0 +1,10 @@
+apiVersion: eno.k8s.io/v1alpha1
+kind: L2ServiceAttachment
+metadata:
+  name: l2serviceattachment-sample
+  namespace: test
+spec:
+  L2Services: ["l2service-sample"]
+  ConnectionPoint: "connectionpoint-br-data"
+  PodInterfaceType: "kernel"
+  VlanType: "access"
