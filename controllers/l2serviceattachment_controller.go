@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"path/filepath"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -87,6 +88,36 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	} else if err != nil {
 		log.Error(err, "Failed to get NetAttachDef")
 		return ctrl.Result{}, err
+	}
+	candidateNetAtt := &nettypes.NetworkAttachmentDefinition{}
+	candidateNetAttUns, err := r.defineNetAttachDef(ctx, log, svc_att)
+	if err != nil {
+		log.Error(err, "Failed to define Unstructured NetAttachDef")
+		return ctrl.Result{}, err
+	}
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(candidateNetAttUns.Object, candidateNetAtt)
+
+	if err != nil {
+		log.Error(err, "Failed to define Typed NetAttachDef")
+		return ctrl.Result{}, err
+	}
+	log.Info("ELAAAAA")
+	fmt.Printf("%+v\n", candidateNetAtt)
+	fmt.Printf("%+v\n", found)
+	fmt.Printf("%+v\n", reflect.DeepEqual(candidateNetAtt.Annotations, found.Annotations))
+	fmt.Printf("%+v\n", reflect.DeepEqual(candidateNetAtt.Spec.Config, found.Spec.Config))
+
+	if !reflect.DeepEqual(candidateNetAtt.Annotations, found.Annotations) ||
+		!reflect.DeepEqual(candidateNetAtt.Spec.Config, found.Spec.Config) {
+		found.Annotations = candidateNetAtt.Annotations
+		found.Spec.Config = candidateNetAtt.Spec.Config
+		err = r.Update(ctx, found)
+		if err != nil {
+			log.Error(err, "Failed to update NetAttachDef", "NetAttachDef.Namespace", found.Namespace, "NetAttachDef.Name", found.Name)
+			return ctrl.Result{}, err
+		}
+		// Spec updated - return and requeue
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	return ctrl.Result{}, nil
