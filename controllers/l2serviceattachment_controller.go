@@ -19,14 +19,15 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"reflect"
+
 	"github.com/Nordix/eno/render"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"path/filepath"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -50,8 +51,8 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	log := r.Log.WithValues("l2serviceattachment", req.NamespacedName)
 
 	// Fetch the L2ServiceAttachment instance
-	svc_att := &enov1alpha1.L2ServiceAttachment{}
-	err := r.Get(ctx, req.NamespacedName, svc_att)
+	svcAtt := &enov1alpha1.L2ServiceAttachment{}
+	err := r.Get(ctx, req.NamespacedName, svcAtt)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -66,21 +67,21 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	}
 	// Check if the NetAttachDef already exists, if not create a new one
 	found := &nettypes.NetworkAttachmentDefinition{}
-	err = r.Get(ctx, types.NamespacedName{Name: svc_att.Name, Namespace: svc_att.Namespace}, found)
+	err = r.Get(ctx, types.NamespacedName{Name: svcAtt.Name, Namespace: svcAtt.Namespace}, found)
 	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new NetAttachDef
 		log.Info("LIGOOO")
-		log.Info(svc_att.Spec.L2Services[0])
-		log.Info(svc_att.Spec.ConnectionPoint)
-		net_att_def, err := r.defineNetAttachDef(ctx, log, svc_att)
+		log.Info(svcAtt.Spec.L2Services[0])
+		log.Info(svcAtt.Spec.ConnectionPoint)
+		netAttDef, err := r.defineNetAttachDef(ctx, log, svcAtt)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		//log.Info("Creating a new NetAttachDef", "NetAttachDef.Namespace", net_att_def.Namespace, "NetAttachDef.Name", net_att_def.Name)
-		err = r.Create(ctx, net_att_def)
+		//log.Info("Creating a new NetAttachDef", "NetAttachDef.Namespace", netAttDef.Namespace, "NetAttachDef.Name", netAttDef.Name)
+		err = r.Create(ctx, netAttDef)
 		if err != nil {
-			//log.Error(err, "Failed to create new NetAttachDef", "NetAttachDef.Namespace", net_att_def.Namespace,
-			//	"NetAttachDef.Name", net_att_def.Name)
+			//log.Error(err, "Failed to create new NetAttachDef", "NetAttachDef.Namespace", netAttDef.Namespace,
+			//	"NetAttachDef.Name", netAttDef.Name)
 			return ctrl.Result{}, err
 		}
 		// NetAttachDef created successfully - return
@@ -90,7 +91,7 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		return ctrl.Result{}, err
 	}
 	candidateNetAtt := &nettypes.NetworkAttachmentDefinition{}
-	candidateNetAttUns, err := r.defineNetAttachDef(ctx, log, svc_att)
+	candidateNetAttUns, err := r.defineNetAttachDef(ctx, log, svcAtt)
 	if err != nil {
 		log.Error(err, "Failed to define Unstructured NetAttachDef")
 		return ctrl.Result{}, err
