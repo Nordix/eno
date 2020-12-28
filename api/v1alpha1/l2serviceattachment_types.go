@@ -42,6 +42,10 @@ type L2ServiceAttachmentSpec struct {
 type L2ServiceAttachmentStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// +kubebuilder:validation:Enum=pending;ready;error;terminating;deleted
+	Phase   string `json:"Phase,omitempty"`
+	Message string `json:"Message,omitempty"`
 }
 
 // +kubebuilder:object:root=true
