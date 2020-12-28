@@ -75,30 +75,72 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		log.Info(svcAtt.Spec.ConnectionPoint)
 		netAttDef, err := r.defineNetAttachDef(ctx, log, svcAtt)
 		if err != nil {
+			svcAtt.Status.Phase = "error"
+			svcAtt.Status.Message = err.Error()
+			errSt := r.Status().Update(ctx, svcAtt)
+			if errSt != nil {
+				log.Error(errSt, "Failed to update L2ServiceAttachment status")
+				return ctrl.Result{}, errSt
+			}
 			return ctrl.Result{}, err
 		}
-		//log.Info("Creating a new NetAttachDef", "NetAttachDef.Namespace", netAttDef.Namespace, "NetAttachDef.Name", netAttDef.Name)
+		log.Info("Creating a new NetAttachDef", "NetAttachDef.Namespace", svcAtt.Namespace, "NetAttachDef.Name", svcAtt.Name)
 		err = r.Create(ctx, netAttDef)
 		if err != nil {
-			//log.Error(err, "Failed to create new NetAttachDef", "NetAttachDef.Namespace", netAttDef.Namespace,
-			//	"NetAttachDef.Name", netAttDef.Name)
+			svcAtt.Status.Phase = "error"
+			svcAtt.Status.Message = err.Error()
+			errSt := r.Status().Update(ctx, svcAtt)
+			if errSt != nil {
+				log.Error(errSt, "Failed to update L2ServiceAttachment status")
+				return ctrl.Result{}, errSt
+			}
+			log.Error(err, "Failed to create new NetAttachDef", "NetAttachDef.Namespace", svcAtt.Namespace,
+				"NetAttachDef.Name", svcAtt.Name)
 			return ctrl.Result{}, err
 		}
 		// NetAttachDef created successfully - return
+		svcAtt.Status.Phase = "pending"
+		svcAtt.Status.Message = "Creation pending"
+		errSt := r.Status().Update(ctx, svcAtt)
+		if errSt != nil {
+			log.Error(errSt, "Failed to update L2ServiceAttachment status")
+			return ctrl.Result{}, errSt
+		}
 		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
+		svcAtt.Status.Phase = "error"
+		svcAtt.Status.Message = err.Error()
+		errSt := r.Status().Update(ctx, svcAtt)
+		if errSt != nil {
+			log.Error(err, "Failed to update L2ServiceAttachment status")
+			return ctrl.Result{}, errSt
+		}
 		log.Error(err, "Failed to get NetAttachDef")
 		return ctrl.Result{}, err
 	}
 	candidateNetAtt := &nettypes.NetworkAttachmentDefinition{}
 	candidateNetAttUns, err := r.defineNetAttachDef(ctx, log, svcAtt)
 	if err != nil {
+		svcAtt.Status.Phase = "error"
+		svcAtt.Status.Message = err.Error()
+		errSt := r.Status().Update(ctx, svcAtt)
+		if errSt != nil {
+			log.Error(errSt, "Failed to update L2ServiceAttachment status")
+			return ctrl.Result{}, errSt
+		}
 		log.Error(err, "Failed to define Unstructured NetAttachDef")
 		return ctrl.Result{}, err
 	}
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(candidateNetAttUns.Object, candidateNetAtt)
 
 	if err != nil {
+		svcAtt.Status.Phase = "error"
+		svcAtt.Status.Message = err.Error()
+		errSt := r.Status().Update(ctx, svcAtt)
+		if errSt != nil {
+			log.Error(errSt, "Failed to update L2ServiceAttachment status")
+			return ctrl.Result{}, errSt
+		}
 		log.Error(err, "Failed to define Typed NetAttachDef")
 		return ctrl.Result{}, err
 	}
@@ -114,11 +156,33 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		found.Spec.Config = candidateNetAtt.Spec.Config
 		err = r.Update(ctx, found)
 		if err != nil {
+			svcAtt.Status.Phase = "error"
+			svcAtt.Status.Message = err.Error()
+			errSt := r.Status().Update(ctx, svcAtt)
+			if errSt != nil {
+				log.Error(errSt, "Failed to update L2ServiceAttachment status")
+				return ctrl.Result{}, errSt
+			}
 			log.Error(err, "Failed to update NetAttachDef", "NetAttachDef.Namespace", found.Namespace, "NetAttachDef.Name", found.Name)
 			return ctrl.Result{}, err
 		}
 		// Spec updated - return and requeue
+		svcAtt.Status.Phase = "pending"
+		svcAtt.Status.Message = "Update pending"
+		errSt := r.Status().Update(ctx, svcAtt)
+		if errSt != nil {
+			log.Error(errSt, "Failed to update L2ServiceAttachment status")
+			return ctrl.Result{}, errSt
+		}
 		return ctrl.Result{Requeue: true}, nil
+	}
+
+	svcAtt.Status.Phase = "ready"
+	svcAtt.Status.Message = "Resources has been created"
+	errSt := r.Status().Update(ctx, svcAtt)
+	if errSt != nil {
+		log.Error(errSt, "Failed to update L2ServiceAttachment status")
+		return ctrl.Result{}, errSt
 	}
 
 	return ctrl.Result{}, nil
