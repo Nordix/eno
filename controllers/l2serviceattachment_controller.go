@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"github.com/Nordix/eno/controllers/connectionpointparser"
 	"github.com/Nordix/eno/render"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -207,12 +208,8 @@ func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(ctx context.Context, 
 		return nil, err
 	}
 
-	net_obj := ""
-	if cp.Spec.Type == "kernel" {
-		net_obj = cp.Spec.InterfaceName
-	} else {
-		net_obj = cp.Spec.ResourceName
-	}
+	cpParser := connectionpointparser.NewCpParser(cp)
+	cpParser.ParseConnectionPoint(&data)
 
 	seg_id_list := []uint16{}
 	switch vlan_type {
@@ -234,7 +231,6 @@ func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(ctx context.Context, 
 
 	data.Data["NetAttachDefName"] = s.Name
 	data.Data["NetAttachDefNamespace"] = s.Namespace
-	data.Data["InterfaceName"] = net_obj
 	data.Data["AccessVlan"] = seg_id_list[0]
 
 	objs, err := render.RenderDir(filepath.Join("manifests", "ovs_netattachdef"), &data)
