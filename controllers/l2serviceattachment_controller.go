@@ -71,78 +71,39 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	err = r.Get(ctx, types.NamespacedName{Name: svcAtt.Name, Namespace: svcAtt.Namespace}, found)
 	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new NetAttachDef
-		log.Info("LIGOOO")
-		log.Info(svcAtt.Spec.L2Services[0])
-		log.Info(svcAtt.Spec.ConnectionPoint)
 		netAttDef, err := r.defineNetAttachDef(ctx, log, svcAtt)
 		if err != nil {
 			// We need to Get the L2ServiceAttachment again to update the Status section
 			// the reason is explained in below links.
 			// https://github.com/operator-framework/operator-sdk/issues/3968
 			// https://github.com/kubernetes/kubernetes/issues/28149
-			svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-			if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-				log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-				// Error reading the object - requeue the request.
-				return ctrl.Result{}, errSvcAttSt
-			}
-			svcAttSt.Status.Phase = "error"
-			svcAttSt.Status.Message = err.Error()
-			errSt := r.Status().Update(ctx, svcAttSt)
-			if errSt != nil {
-				log.Error(errSt, "Failed to update L2ServiceAttachment status")
-				return ctrl.Result{}, errSt
+			// Update status of L2ServiceAttachment resource with error phase
+			if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+				return ctrl.Result{}, err
 			}
 			return ctrl.Result{}, err
 		}
 		log.Info("Creating a new NetAttachDef", "NetAttachDef.Namespace", svcAtt.Namespace, "NetAttachDef.Name", svcAtt.Name)
 		err = r.Create(ctx, netAttDef)
 		if err != nil {
-			svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-			if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-				log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-				// Error reading the object - requeue the request.
-				return ctrl.Result{}, errSvcAttSt
-			}
-			svcAttSt.Status.Phase = "error"
-			svcAttSt.Status.Message = err.Error()
-			errSt := r.Status().Update(ctx, svcAttSt)
-			if errSt != nil {
-				log.Error(errSt, "Failed to update L2ServiceAttachment status")
-				return ctrl.Result{}, errSt
+			// Update status of L2ServiceAttachment resource with error phase
+			if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+				return ctrl.Result{}, err
 			}
 			log.Error(err, "Failed to create new NetAttachDef", "NetAttachDef.Namespace", svcAtt.Namespace,
 				"NetAttachDef.Name", svcAtt.Name)
 			return ctrl.Result{}, err
 		}
 		// NetAttachDef created successfully - return
-		svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-		if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-			log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-			// Error reading the object - requeue the request.
-			return ctrl.Result{}, errSvcAttSt
-		}
-		svcAttSt.Status.Phase = "pending"
-		svcAttSt.Status.Message = "Creation pending"
-		errSt := r.Status().Update(ctx, svcAttSt)
-		if errSt != nil {
-			log.Error(errSt, "Failed to update L2ServiceAttachment status")
-			return ctrl.Result{}, errSt
+		// Update status of L2ServiceAttachment resource with pending phase
+		if err := r.UpdateStatus(ctx, req, log, "pending", "Creation pending"); err != nil {
+			return ctrl.Result{}, err
 		}
 		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
-		svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-		if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-			log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-			// Error reading the object - requeue the request.
-			return ctrl.Result{}, errSvcAttSt
-		}
-		svcAttSt.Status.Phase = "error"
-		svcAttSt.Status.Message = err.Error()
-		errSt := r.Status().Update(ctx, svcAttSt)
-		if errSt != nil {
-			log.Error(err, "Failed to update L2ServiceAttachment status")
-			return ctrl.Result{}, errSt
+		// Update status of L2ServiceAttachment resource with error phase
+		if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+			return ctrl.Result{}, err
 		}
 		log.Error(err, "Failed to get NetAttachDef")
 		return ctrl.Result{}, err
@@ -150,18 +111,9 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	candidateNetAtt := &nettypes.NetworkAttachmentDefinition{}
 	candidateNetAttUns, err := r.defineNetAttachDef(ctx, log, svcAtt)
 	if err != nil {
-		svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-		if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-			log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-			// Error reading the object - requeue the request.
-			return ctrl.Result{}, errSvcAttSt
-		}
-		svcAttSt.Status.Phase = "error"
-		svcAttSt.Status.Message = err.Error()
-		errSt := r.Status().Update(ctx, svcAttSt)
-		if errSt != nil {
-			log.Error(errSt, "Failed to update L2ServiceAttachment status")
-			return ctrl.Result{}, errSt
+		// Update status of L2ServiceAttachment resource with error phase
+		if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+			return ctrl.Result{}, err
 		}
 		log.Error(err, "Failed to define Unstructured NetAttachDef")
 		return ctrl.Result{}, err
@@ -169,18 +121,9 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(candidateNetAttUns.Object, candidateNetAtt)
 
 	if err != nil {
-		svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-		if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-			log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-			// Error reading the object - requeue the request.
-			return ctrl.Result{}, errSvcAttSt
-		}
-		svcAttSt.Status.Phase = "error"
-		svcAttSt.Status.Message = err.Error()
-		errSt := r.Status().Update(ctx, svcAttSt)
-		if errSt != nil {
-			log.Error(errSt, "Failed to update L2ServiceAttachment status")
-			return ctrl.Result{}, errSt
+		// Update status of L2ServiceAttachment resource with error phase
+		if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+			return ctrl.Result{}, err
 		}
 		log.Error(err, "Failed to define Typed NetAttachDef")
 		return ctrl.Result{}, err
@@ -197,51 +140,23 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		found.Spec.Config = candidateNetAtt.Spec.Config
 		err = r.Update(ctx, found)
 		if err != nil {
-			svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-			if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-				log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-				// Error reading the object - requeue the request.
-				return ctrl.Result{}, errSvcAttSt
-			}
-			svcAttSt.Status.Phase = "error"
-			svcAttSt.Status.Message = err.Error()
-			errSt := r.Status().Update(ctx, svcAttSt)
-			if errSt != nil {
-				log.Error(errSt, "Failed to update L2ServiceAttachment status")
-				return ctrl.Result{}, errSt
+			// Update status of L2ServiceAttachment resource with error phase
+			if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+				return ctrl.Result{}, err
 			}
 			log.Error(err, "Failed to update NetAttachDef", "NetAttachDef.Namespace", found.Namespace, "NetAttachDef.Name", found.Name)
 			return ctrl.Result{}, err
 		}
-		// Spec updated - return and requeue
-		svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-		if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-			log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-			// Error reading the object - requeue the request.
-			return ctrl.Result{}, errSvcAttSt
+		// Update status of L2ServiceAttachment resource with pending phase
+		if err := r.UpdateStatus(ctx, req, log, "pending", "Update pending"); err != nil {
+			return ctrl.Result{}, err
 		}
-		svcAttSt.Status.Phase = "pending"
-		svcAttSt.Status.Message = "Update pending"
-		errSt := r.Status().Update(ctx, svcAttSt)
-		if errSt != nil {
-			log.Error(errSt, "Failed to update L2ServiceAttachment status")
-			return ctrl.Result{}, errSt
-		}
+
 		return ctrl.Result{Requeue: true}, nil
 	}
-
-	svcAttSt := &enov1alpha1.L2ServiceAttachment{}
-	if errSvcAttSt := r.Get(ctx, req.NamespacedName, svcAttSt); errSvcAttSt != nil {
-		log.Error(errSvcAttSt, "Failed to get L2ServiceAttachment")
-		// Error reading the object - requeue the request.
-		return ctrl.Result{}, errSvcAttSt
-	}
-	svcAttSt.Status.Phase = "ready"
-	svcAttSt.Status.Message = "Resources has been created"
-	errSt := r.Status().Update(ctx, svcAttSt)
-	if errSt != nil {
-		log.Error(errSt, "Failed to update L2ServiceAttachment status")
-		return ctrl.Result{}, errSt
+	// Update status of L2ServiceAttachment resource with ready phase
+	if err := r.UpdateStatus(ctx, req, log, "ready", "Resources has been created"); err != nil {
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
