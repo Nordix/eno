@@ -42,8 +42,7 @@ spec:
             Implementation:
               enum:
               - ovs
-              - macvlan
-              - sriov
+              - host-device
               type: string
             L2Services:
               items:

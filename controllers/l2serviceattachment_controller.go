@@ -22,10 +22,9 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/Nordix/eno/controllers/connectionpointparser"
+	"github.com/Nordix/eno/controllers/l2serviceattachmentparser"
 	"github.com/Nordix/eno/render"
 	"github.com/go-logr/logr"
-	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -166,47 +165,44 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(ctx context.Context, log logr.Logger, s *enov1alpha1.L2ServiceAttachment) (*uns.Unstructured, error) {
 
 	objs := []*uns.Unstructured{}
+	l2srvObjs := []*enov1alpha1.L2Service{}
 	data := render.MakeRenderData()
 
 	cp_name := s.Spec.ConnectionPoint
-	l2srv_list := s.Spec.L2Services
+	l2srvNames := s.Spec.L2Services
 	vlan_type := s.Spec.VlanType
 	log.Info("PAMEE_LIGOOO")
-	log.Info(l2srv_list[0])
 	log.Info(cp_name)
 	log.Info(vlan_type)
+
+	// Get the ConnectionPoint resource
 	cp := &enov1alpha1.ConnectionPoint{}
 	if err := r.Get(ctx, types.NamespacedName{Name: cp_name}, cp); err != nil {
 		log.Error(err, "Failed to find ConnectionPoint", "ConnectionPoint.Name", cp_name)
 		return nil, err
 	}
-
-	cpParser := connectionpointparser.NewCpParser(cp, log)
-	cpParser.ParseConnectionPoint(&data)
-
-	seg_id_list := []uint16{}
-	switch vlan_type {
-	case "access":
-		if len(l2srv_list) != 1 {
-			err := errors.Errorf("Cannot use more than one L2Services for VlanType=access case")
-			log.Error(err, "L2Services cannot contain more than one L2Services in VlanType=access case")
+	// Get one or more L2Service resources
+	for _, l2srvName := range l2srvNames {
+		tempObj := &enov1alpha1.L2Service{}
+		if err := r.Get(ctx, types.NamespacedName{Name: l2srvName}, tempObj); err != nil {
+			log.Error(err, "Failed to find L2Service", "L2Service.Name", l2srvName)
 			return nil, err
 		}
-
-		l2srv_name := l2srv_list[0]
-		l2srv := &enov1alpha1.L2Service{}
-		if err := r.Get(ctx, types.NamespacedName{Name: l2srv_name}, l2srv); err != nil {
-			log.Error(err, "Failed to find L2Service", "L2Service.Name", l2srv_name)
-			return nil, err
-		}
-		seg_id_list = append(seg_id_list, l2srv.Spec.SegmentationID)
+		l2srvObjs = append(l2srvObjs, tempObj)
+	}
+	// Initiate L2ServiceAttachment Parser
+	l2srvAttParser := l2serviceattachmentparser.NewL2SrvAttParser(s, l2srvObjs, cp, log)
+	// Parse the resources and fill the data
+	manifestFolder, err := l2srvAttParser.ParseL2ServiceAttachment(&data)
+	if err != nil {
+		log.Error(err, "Error occurred during parsing the L2ServiceAttachment")
+		return nil, err
 	}
 
 	data.Data["NetAttachDefName"] = s.Name
 	data.Data["NetAttachDefNamespace"] = s.Namespace
-	data.Data["AccessVlan"] = seg_id_list[0]
 
-	objs, err := render.RenderDir(filepath.Join("manifests", "ovs_netattachdef"), &data)
+	objs, err = render.RenderDir(filepath.Join("manifests", manifestFolder), &data)
 
 	if err != nil {
 		return nil, err

@@ -34,7 +34,7 @@ type L2ServiceAttachmentSpec struct {
 	PodInterfaceType string `json:"PodInterfaceType"`
 	// +kubebuilder:validation:Enum=trunk;access;selectivetrunk
 	VlanType string `json:"VlanType"`
-	// +kubebuilder:validation:Enum=ovs;macvlan;sriov
+	// +kubebuilder:validation:Enum=ovs;host-device
 	Implementation string `json:"Implementation,omitempty"`
 }
 

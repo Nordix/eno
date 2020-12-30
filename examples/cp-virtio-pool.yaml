@@ -1,0 +1,9 @@
+apiVersion: eno.k8s.io/v1alpha1
+kind: ConnectionPoint
+metadata:
+  name: connectionpoint-virtio-pool
+spec:
+  Type: "pcidev"
+  NodePool: "universal"
+  PhysicalNet: "PhysNet"
+  ResourceName: "intel.com/virio_net_device"

@@ -1,11 +1,11 @@
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2ServiceAttachment
 metadata:
-  name: l2serviceattachment-sample
+  name: l2serviceattachment-selective
   namespace: test
 spec:
-  L2Services: ["l2service-sample"]
+  L2Services: ["l2service-five", "l2service-six", "l2service-seven"]
   ConnectionPoint: "connectionpoint-br-data"
   PodInterfaceType: "kernel"
   Implementation: "ovs"
-  VlanType: "access"
+  VlanType: "selectivetrunk"

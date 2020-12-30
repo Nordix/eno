@@ -1,0 +1,7 @@
+apiVersion: eno.k8s.io/v1alpha1
+kind: L2Service
+metadata:
+  name: l2service-seven
+spec:
+  SegmentationID: 7
+  PhysicalNet: ["PhysDC"]

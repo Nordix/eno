@@ -1,11 +1,11 @@
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2ServiceAttachment
 metadata:
-  name: l2serviceattachment-sample
+  name: l2serviceattachment-host-device
   namespace: test
 spec:
   L2Services: ["l2service-sample"]
-  ConnectionPoint: "connectionpoint-br-data"
+  ConnectionPoint: "connectionpoint-virtio-pool"
   PodInterfaceType: "kernel"
-  Implementation: "ovs"
+  Implementation: "host-device"
   VlanType: "access"
