@@ -181,7 +181,7 @@ func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(ctx context.Context, 
 		return nil, err
 	}
 
-	cpParser := connectionpointparser.NewCpParser(cp)
+	cpParser := connectionpointparser.NewCpParser(cp, log)
 	cpParser.ParseConnectionPoint(&data)
 
 	seg_id_list := []uint16{}
