@@ -19,11 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"reflect"
 
-	"github.com/Nordix/eno/controllers/l2serviceattachmentparser"
-	"github.com/Nordix/eno/render"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,7 +30,6 @@ import (
 
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
-	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 // L2ServiceAttachmentReconciler reconciles a L2ServiceAttachment object
@@ -70,7 +66,7 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	err = r.Get(ctx, types.NamespacedName{Name: svcAtt.Name, Namespace: svcAtt.Namespace}, found)
 	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new NetAttachDef
-		netAttDef, err := r.defineNetAttachDef(ctx, log, svcAtt)
+		netAttDef, err := r.DefineNetAttachDef(ctx, log, svcAtt)
 		if err != nil {
 			// We need to Get the L2ServiceAttachment again to update the Status section
 			// the reason is explained in below links.
@@ -108,7 +104,7 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		return ctrl.Result{}, err
 	}
 	candidateNetAtt := &nettypes.NetworkAttachmentDefinition{}
-	candidateNetAttUns, err := r.defineNetAttachDef(ctx, log, svcAtt)
+	candidateNetAttUns, err := r.DefineNetAttachDef(ctx, log, svcAtt)
 	if err != nil {
 		// Update status of L2ServiceAttachment resource with error phase
 		if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
@@ -127,7 +123,7 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		log.Error(err, "Failed to define Typed NetAttachDef")
 		return ctrl.Result{}, err
 	}
-	log.Info("ELAAAAA")
+	log.Info("Checking found and cadidate net-attach-def")
 	fmt.Printf("%+v\n", candidateNetAtt)
 	fmt.Printf("%+v\n", found)
 	fmt.Printf("%+v\n", reflect.DeepEqual(candidateNetAtt.Annotations, found.Annotations))
@@ -159,59 +155,6 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	}
 
 	return ctrl.Result{}, nil
-}
-
-//func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(ctx context.Context, log logr.Logger, s *enov1alpha1.L2ServiceAttachment) (*nettypes.NetworkAttachmentDefinition, error) {
-func (r *L2ServiceAttachmentReconciler) defineNetAttachDef(ctx context.Context, log logr.Logger, s *enov1alpha1.L2ServiceAttachment) (*uns.Unstructured, error) {
-
-	objs := []*uns.Unstructured{}
-	l2srvObjs := []*enov1alpha1.L2Service{}
-	data := render.MakeRenderData()
-
-	cp_name := s.Spec.ConnectionPoint
-	l2srvNames := s.Spec.L2Services
-	vlan_type := s.Spec.VlanType
-	log.Info("PAMEE_LIGOOO")
-	log.Info(cp_name)
-	log.Info(vlan_type)
-
-	// Get the ConnectionPoint resource
-	cp := &enov1alpha1.ConnectionPoint{}
-	if err := r.Get(ctx, types.NamespacedName{Name: cp_name}, cp); err != nil {
-		log.Error(err, "Failed to find ConnectionPoint", "ConnectionPoint.Name", cp_name)
-		return nil, err
-	}
-	// Get one or more L2Service resources
-	for _, l2srvName := range l2srvNames {
-		tempObj := &enov1alpha1.L2Service{}
-		if err := r.Get(ctx, types.NamespacedName{Name: l2srvName}, tempObj); err != nil {
-			log.Error(err, "Failed to find L2Service", "L2Service.Name", l2srvName)
-			return nil, err
-		}
-		l2srvObjs = append(l2srvObjs, tempObj)
-	}
-	// Initiate L2ServiceAttachment Parser
-	l2srvAttParser := l2serviceattachmentparser.NewL2SrvAttParser(s, l2srvObjs, cp, log)
-	// Parse the resources and fill the data
-	manifestFolder, err := l2srvAttParser.ParseL2ServiceAttachment(&data)
-	if err != nil {
-		log.Error(err, "Error occurred during parsing the L2ServiceAttachment")
-		return nil, err
-	}
-
-	data.Data["NetAttachDefName"] = s.Name
-	data.Data["NetAttachDefNamespace"] = s.Namespace
-
-	objs, err = render.RenderDir(filepath.Join("manifests", manifestFolder), &data)
-
-	if err != nil {
-		return nil, err
-	}
-	log.Info("Dimitris")
-	fmt.Printf("%+v\n", objs[0])
-	ctrl.SetControllerReference(s, objs[0], r.Scheme)
-	return objs[0], nil
-	//return nil, err
 }
 
 func (r *L2ServiceAttachmentReconciler) SetupWithManager(mgr ctrl.Manager) error {
