@@ -1,0 +1,11 @@
+apiVersion: eno.k8s.io/v1alpha1
+kind: L2ServiceAttachment
+metadata:
+  name: l2serviceattachment-trunk
+  namespace: test
+spec:
+  L2Services: ["l2service-five", "l2service-six", "l2service-seven"]
+  ConnectionPoint: "connectionpoint-br-trunk"
+  PodInterfaceType: "kernel"
+  Implementation: "ovs"
+  VlanType: "trunk"

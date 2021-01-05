@@ -8,4 +8,4 @@ spec:
   ConnectionPoint: "connectionpoint-virtio-pool"
   PodInterfaceType: "kernel"
   Implementation: "host-device"
-  VlanType: "access"
+  VlanType: "trunk"
