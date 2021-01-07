@@ -1,6 +1,7 @@
 package l2serviceattachmentparser
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/Nordix/eno/pkg/connectionpointparser"
 	"github.com/Nordix/eno/pkg/render"
 	"github.com/go-logr/logr"
-	"github.com/pkg/errors"
 )
 
 // L2SrvAttParser instance
@@ -61,7 +61,7 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 func (sattp *L2SrvAttParser) pickCni(cni string) (string, error) {
 	// TODO: Add support for default CNIs
 	if cni == "" {
-		err := errors.Errorf("Please define a CNI to use. We do not support default CNIs yet")
+		err := errors.New("Please define a CNI to use. We do not support default CNIs yet")
 		return "", err
 	}
 	return sattp.srvAttResource.Spec.Implementation, nil
@@ -74,7 +74,7 @@ func (sattp *L2SrvAttParser) handleOvsCniCase(d *render.RenderData) error {
 	switch sattp.srvAttResource.Spec.VlanType {
 	case "access":
 		if len(sattp.l2srvResources) != 1 {
-			err := errors.Errorf("Cannot use more than one L2Services for VlanType=access case")
+			err := errors.New("Cannot use more than one L2Services for VlanType=access case")
 			sattp.log.Error(err, "L2Services cannot contain more than one L2Services in VlanType=access case")
 			return err
 		}
