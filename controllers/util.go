@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
-	"github.com/Nordix/eno/controllers/l2serviceattachmentparser"
-	"github.com/Nordix/eno/render"
+	"github.com/Nordix/eno/pkg/l2serviceattachmentparser"
+	"github.com/Nordix/eno/pkg/render"
 	"github.com/go-logr/logr"
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"

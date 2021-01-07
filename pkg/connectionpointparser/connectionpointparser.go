@@ -2,7 +2,7 @@ package connectionpointparser
 
 import (
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
-	"github.com/Nordix/eno/render"
+	"github.com/Nordix/eno/pkg/render"
 	"github.com/go-logr/logr"
 )
 
