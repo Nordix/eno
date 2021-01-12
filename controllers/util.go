@@ -57,7 +57,7 @@ func (r *L2ServiceAttachmentReconciler) DefineNetAttachDef(ctx context.Context, 
 		l2srvObjs = append(l2srvObjs, tempObj)
 	}
 	// Initiate L2ServiceAttachment Parser
-	l2srvAttParser := l2serviceattachmentparser.NewL2SrvAttParser(s, l2srvObjs, cp, log)
+	l2srvAttParser := l2serviceattachmentparser.NewL2SrvAttParser(s, l2srvObjs, cp, r.Config, log)
 	// Parse the resources and fill the data
 	manifestFolder, err := l2srvAttParser.ParseL2ServiceAttachment(&data)
 	if err != nil {
