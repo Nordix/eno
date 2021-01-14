@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/Nordix/eno/pkg/render"
 	"github.com/go-logr/logr"
 )
@@ -17,14 +16,14 @@ type Cnier interface {
 
 // OvsCni instance
 type OvsCni struct {
-	L2srvResources []*enov1alpha1.L2Service
-	VlanType       string
-	Log            logr.Logger
+	VlanIds  []uint16
+	VlanType string
+	Log      logr.Logger
 }
 
 // NewOvsCni - creates an instance of OvsCni struct
-func NewOvsCni(l2srvObjs []*enov1alpha1.L2Service, typeOfVlan string, logger logr.Logger) *OvsCni {
-	return &OvsCni{L2srvResources: l2srvObjs,
+func NewOvsCni(vlans []uint16, typeOfVlan string, logger logr.Logger) *OvsCni {
+	return &OvsCni{VlanIds: vlans,
 		VlanType: typeOfVlan,
 		Log:      logger}
 }
@@ -35,16 +34,16 @@ func (ovscni *OvsCni) HandleCni(d *render.RenderData) error {
 	//For VlanType=trunk we do not need to do anything
 	switch ovscni.VlanType {
 	case "access":
-		if len(ovscni.L2srvResources) != 1 {
-			err := errors.New("Cannot use more than one L2Services for VlanType=access case")
-			ovscni.Log.Error(err, "L2Services cannot contain more than one L2Services in VlanType=access case")
+		if len(ovscni.VlanIds) != 1 {
+			err := errors.New("Cannot use more than one Vlan for VlanType=access case")
+			ovscni.Log.Error(err, "L2Services cannot contain more than one Vlan in VlanType=access case")
 			return err
 		}
-		d.Data["AccessVlan"] = ovscni.L2srvResources[0].Spec.SegmentationID
+		d.Data["AccessVlan"] = ovscni.VlanIds[0]
 	case "selectivetrunk":
 		tmpList := []string{}
-		for _, l2srvObj := range ovscni.L2srvResources {
-			tmpStr := "{\"id\": " + strconv.Itoa(int(l2srvObj.Spec.SegmentationID)) + "}"
+		for _, vlanId := range ovscni.VlanIds {
+			tmpStr := "{\"id\": " + strconv.Itoa(int(vlanId)) + "}"
 			tmpList = append(tmpList, tmpStr)
 		}
 		d.Data["SelectiveVlan"] = "[" + strings.Join(tmpList, ",") + "]"

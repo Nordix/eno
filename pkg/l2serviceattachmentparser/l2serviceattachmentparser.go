@@ -93,7 +93,8 @@ func (sattp *L2SrvAttParser) instantiateCni(cniToUse string) (string, cni.Cnier)
 	var manifestFolder string
 	switch cniToUse {
 	case "ovs":
-		cniObj = cni.NewOvsCni(sattp.l2srvResources, sattp.srvAttResource.Spec.VlanType, sattp.log)
+		segIds := sattp.getSegIds()
+		cniObj = cni.NewOvsCni(segIds, sattp.srvAttResource.Spec.VlanType, sattp.log)
 		manifestFolder = "ovs_netattachdef"
 	case "host-device":
 		cniObj = cni.NewHostDevCni(sattp.srvAttResource.Spec.VlanType, sattp.log)
@@ -101,4 +102,13 @@ func (sattp *L2SrvAttParser) instantiateCni(cniToUse string) (string, cni.Cnier)
 	}
 	return manifestFolder, cniObj
 
+}
+
+// getSegIds - returns a list with the segmentation Ids
+func (sattp *L2SrvAttParser) getSegIds() []uint16 {
+	var tmpslice []uint16
+	for _, l2srvObj := range sattp.l2srvResources {
+		tmpslice = append(tmpslice, l2srvObj.Spec.SegmentationID)
+	}
+	return tmpslice
 }
