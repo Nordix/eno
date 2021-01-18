@@ -47,6 +47,7 @@ spec:
             L2Services:
               items:
                 type: string
+              minItems: 1
               type: array
             PodInterfaceType:
               enum:

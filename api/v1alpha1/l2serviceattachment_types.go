@@ -28,6 +28,7 @@ type L2ServiceAttachmentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// +kubebuilder:validation:MinItems:=1
 	L2Services      []string `json:"L2Services"`
 	ConnectionPoint string   `json:"ConnectionPoint"`
 	// +kubebuilder:validation:Enum=kernel;dpdk
