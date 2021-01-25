@@ -1,7 +1,0 @@
-apiVersion: eno.k8s.io/v1alpha1
-kind: L2Service
-metadata:
-  name: l2service-five
-spec:
-  SegmentationID: 5
-  PhysicalNet: ["PhysDC"]

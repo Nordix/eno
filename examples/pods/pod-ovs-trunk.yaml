@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-ovs-trunk
+  namespace: test
+  annotations:
+    k8s.v1.cni.cncf.io/networks: ovs-trunk
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/sh", "-c", "sleep 99999"]
+    image: alpine

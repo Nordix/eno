@@ -1,9 +1,9 @@
 apiVersion: eno.k8s.io/v1alpha1
 kind: ConnectionPoint
 metadata:
-  name: connectionpoint-br-trunk
+  name: cp-br-trunk
 spec:
   Type: "kernel"
-  NodePool: "universal"
-  PhysicalNet: "PhysNet"
+  NodePool: "ovs-pool"
+  PhysicalNet: "ovs-physnet-two"
   InterfaceName: "br-trunk"

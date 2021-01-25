@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-ovs-access
+  namespace: test
+  annotations:
+    k8s.v1.cni.cncf.io/networks: ovs-access
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/sh", "-c", "sleep 99999"]
+    image: alpine
