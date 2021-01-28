@@ -9,6 +9,22 @@ rules:
 - apiGroups:
   - eno.k8s.io
   resources:
+  - connectionpoints
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - connectionpoints
+  - l2services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eno.k8s.io
+  resources:
   - l2serviceattachments
   verbs:
   - create
@@ -26,3 +42,9 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - k8s.cni.cncf.io
+  resources:
+  - '*'
+  verbs:
+  - '*'

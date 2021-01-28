@@ -27,8 +27,12 @@ spec:
         - /manager
         args:
         - --enable-leader-election
-        image: controller:latest
+        image: eno-controller:latest
+        imagePullPolicy: Never
         name: manager
+        volumeMounts:
+        - name: eno-config
+          mountPath: /etc/eno
         resources:
           limits:
             cpu: 100m
@@ -36,4 +40,8 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+      volumes:
+      - name: eno-config
+        configMap:
+          name: eno-config
       terminationGracePeriodSeconds: 10
