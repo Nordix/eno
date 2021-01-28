@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-hostdevice-trunk
+  namespace: test
+  annotations:
+    k8s.v1.cni.cncf.io/networks: hostdevice-trunk
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/sh", "-c", "sleep 99999"]
+    image: alpine
