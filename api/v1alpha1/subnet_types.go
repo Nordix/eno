@@ -29,12 +29,12 @@ type SubnetSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// +kubebuilder:validation:Enum=whereabouts
-	Ipam           string   `json:"Ipam"`
-	Address        string   `json:"Address"`
-	Mask           int16    `json:"Mask"`
-	AllocationPool []IPPool `json:"AllocationPool,omitempty"`
-	Routes         []string `json:"Routes,omitempty"`
-	DNS            string   `json:"DNS,omitempty"`
+	Ipam           string    `json:"Ipam"`
+	Address        string    `json:"Address"`
+	Mask           int16     `json:"Mask"`
+	AllocationPool []IPPool  `json:"AllocationPool,omitempty"`
+	Routes         []string  `json:"Routes,omitempty"`
+	DNS            SubnetDNS `json:"Dns,omitempty"`
 	// +kubebuilder:validation:Enum=v4;v6
 	Type string `json:"Type"`
 }
@@ -71,6 +71,13 @@ type SubnetList struct {
 type IPPool struct {
 	Start string `json:"Start"`
 	End   string `json:"End"`
+}
+
+// SubnetDNS contains DNS configurations
+type SubnetDNS struct {
+	Nameservers []string `json:"Nameservers,omitempty"`
+	Domain      string   `json:"Domain,omitempty"`
+	Search      []string `json:"Search,omitempty"`
 }
 
 func init() {
