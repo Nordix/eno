@@ -3,6 +3,7 @@ package cni
 import (
 	"errors"
 	"github.com/Nordix/eno/pkg/framework"
+	l2SvcAttPars "github.com/Nordix/eno/pkg/l2serviceattachmentparser"
 	"k8s.io/klog"
 	"strconv"
 	"strings"
@@ -18,7 +19,7 @@ type OvsCni struct {
 	Log      logr.Logger
 }
 
-const ovsCniName = "OvsCNI"
+const ovsCniName = "ovs"
 
 func init() {
 	klog.Info("Registering Ovs CNI")
@@ -27,14 +28,13 @@ func init() {
 	}
 }
 
-
 // CreateOvsCni - creates an instance of OvsCni struct
 func CreateOvsCni() framework.Cnier {
 	return &OvsCni{}
 }
 
 // HandleCni - Handles the ovs-cni case
-func (ovscni *OvsCni) HandleCni(d *render.RenderData) error {
+func (ovscni *OvsCni) HandleCni(sattp *l2SvcAttPars.L2SrvAttParser, d *render.RenderData) error {
 	//For VlanType=trunk we do not need to do anything
 	switch ovscni.VlanType {
 	case "access":

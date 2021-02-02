@@ -11,6 +11,7 @@ import (
 	"github.com/Nordix/eno/pkg/connectionpointparser"
 	"github.com/Nordix/eno/pkg/render"
 	"github.com/go-logr/logr"
+	"github.com/Nordix/eno/pkg/framework"
 )
 
 // L2SrvAttParser instance
@@ -41,67 +42,11 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 	// Parse ConnectionPoint object
 	cpParser.ParseConnectionPoint(d)
 
-	cniToUse, err := sattp.pickCni()
-	if err != nil {
-		sattp.log.Error(err, "Error occured while picking cni")
-		return "", err
-	}
+	cniManager := framework.CreateCniManager(sattp)
 
-	manifestFolder, cniObj := sattp.instantiateCni(cniToUse)
-
-	if err := cniObj.HandleCni(d); err != nil {
-		sattp.log.Error(err, "Error occured while handling cni")
-		return "", err
-	}
+	cniManager.Execute()
 
 	return manifestFolder, nil
-}
-
-// pickCni - pick the CNI to be used for net-attach-def
-func (sattp *L2SrvAttParser) pickCni() (string, error) {
-	var cniToUse string
-
-	// Default case - No CNI has been specified
-	if sattp.srvAttResource.Spec.Implementation == "" {
-		if sattp.srvAttResource.Spec.PodInterfaceType == "kernel" {
-			cniToUse = sattp.config.KernelCni
-		} else {
-			err := errors.New("We do not support default Cnis for PodInterfaceType=dpdk currenlty ")
-			sattp.log.Error(err, "Error occured while picking cni to use")
-			return "", err
-		}
-	} else {
-		if sattp.srvAttResource.Spec.PodInterfaceType == "kernel" {
-			if !common.SearchInSlice(sattp.srvAttResource.Spec.Implementation, common.GetKernelSupportedCnis()) {
-				err := fmt.Errorf(" %s cni is not supported currently", sattp.srvAttResource.Spec.Implementation)
-				sattp.log.Error(err, "Error occured while picking cni to use")
-				return "", err
-			}
-			cniToUse = sattp.srvAttResource.Spec.Implementation
-		} else {
-			err := errors.New("We do not support Cnis for PodInterfaceType=dpdk currenlty ")
-			sattp.log.Error(err, "Error occured while picking cni to use")
-			return "", err
-		}
-	}
-	return cniToUse, nil
-}
-
-// instantiateCni - Instantiate the CNI object to be used
-func (sattp *L2SrvAttParser) instantiateCni(cniToUse string) (string, cni.Cnier) {
-	var cniObj cni.Cnier
-	var manifestFolder string
-	switch cniToUse {
-	case "ovs":
-		segIds := sattp.getSegIds()
-		cniObj = cni.NewOvsCni(segIds, sattp.srvAttResource.Spec.VlanType, sattp.log)
-		manifestFolder = "ovs_netattachdef"
-	case "host-device":
-		cniObj = cni.NewHostDevCni(sattp.srvAttResource.Spec.VlanType, sattp.log)
-		manifestFolder = "host-device_netattachdef"
-	}
-	return manifestFolder, cniObj
-
 }
 
 // getSegIds - returns a list with the segmentation Ids

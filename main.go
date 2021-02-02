@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"k8s.io/klog"
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,6 +53,7 @@ func init() {
 }
 
 func main() {
+	klog.InitFlags(nil)
 	var metricsAddr string
 	var enableLeaderElection bool
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")

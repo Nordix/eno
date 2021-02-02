@@ -51,3 +51,13 @@ func (cf *CniFactory) register(methodName string, createFunc createCnierFunc) er
 	cf.createFuncs[methodName] = createFunc
 	return nil
 }
+
+func (cf *CniFactory) createCniInstance(cniName string) (Cnier, error) {
+	cf.lock.RLock()
+	defer cf.lock.RUnlock()
+	createFunc, exists := cf.createFuncs[cniName]
+	if !exists {
+		return nil, fmt.Errorf("unknown cni %s", cniName)
+	}
+	return createFunc(), nil
+}

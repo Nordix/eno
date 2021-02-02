@@ -1,7 +1,7 @@
 package cni
 
 import (
-	"errors"
+	l2SvcAttPars "github.com/Nordix/eno/pkg/l2serviceattachmentparser"
 	"github.com/Nordix/eno/pkg/render"
 	"github.com/Nordix/eno/pkg/framework"
 	"github.com/go-logr/logr"
@@ -14,7 +14,7 @@ type HostDevCni struct {
 	Log      logr.Logger
 }
 
-const hostDeviceCniName = "HostDeviceCNI"
+const hostDeviceCniName = "host-device"
 
 func init() {
 	klog.Info("Registering Host Device CNI")
@@ -29,18 +29,18 @@ func CreateHostDeviceCni() framework.Cnier {
 }
 
 // HandleCni - Handles the host-device-cni case
-func (hdcni *HostDevCni) HandleCni(d *render.RenderData) error {
-	switch hdcni.VlanType {
-	case "access":
-		err := errors.New("Host-device cni does not support VlanType=access")
-		hdcni.Log.Error(err, "Host-device VlanType error")
-		return err
-	case "selectivetrunk":
-		err := errors.New("Host-device cni does not support VlanType=selectivetrunk")
-		hdcni.Log.Error(err, "Host-device VlanType error")
-		return err
-	case "trunk":
-		hdcni.Log.Info("Transparent Trunk case in Host-device cni")
-	}
+func (hdcni *HostDevCni) HandleCni(sattp *l2SvcAttPars.L2SrvAttParser, d *render.RenderData) error {
+	//switch hdcni.VlanType {
+	//case "access":
+	//	err := errors.New("Host-device cni does not support VlanType=access")
+	//	hdcni.Log.Error(err, "Host-device VlanType error")
+	//	return err
+	//case "selectivetrunk":
+	//	err := errors.New("Host-device cni does not support VlanType=selectivetrunk")
+	//	hdcni.Log.Error(err, "Host-device VlanType error")
+	//	return err
+	//case "trunk":
+	//	hdcni.Log.Info("Transparent Trunk case in Host-device cni")
+	//}
 	return nil
 }

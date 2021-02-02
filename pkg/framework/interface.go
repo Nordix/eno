@@ -16,14 +16,17 @@ limitations under the License.
 
 package framework
 
-import "github.com/Nordix/eno/pkg/render"
+import (
+	l2SvcAttPars "github.com/Nordix/eno/pkg/l2serviceattachmentparser"
+	"github.com/Nordix/eno/pkg/render"
+)
 
 //type IpamCni interface {
 //
 //}
 
 type Cnier interface {
-	HandleCni(d *render.RenderData) error
+	HandleCni(sattp *l2SvcAttPars.L2SrvAttParser, d *render.RenderData) error
 }
 
 type createCnierFunc func() Cnier
