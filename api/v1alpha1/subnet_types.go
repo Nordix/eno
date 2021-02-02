@@ -28,10 +28,13 @@ type SubnetSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Ipam      string   `json:"Ipam"`
-	Addresses []IpPool `json:"Addresses"`
-	Routes    []string `json:"Routes,omitempty"`
-	DNS       string   `json:"DNS,omitempty"`
+	// +kubebuilder:validation:Enum=whereabouts
+	Ipam           string   `json:"Ipam"`
+	Address        string   `json:"Address"`
+	Mask           int16    `json:"Mask"`
+	AllocationPool []IpPool `json:"AllocationPool"`
+	Routes         []string `json:"Routes,omitempty"`
+	DNS            string   `json:"DNS,omitempty"`
 	// +kubebuilder:validation:Enum=v4;v6
 	Type string `json:"Type"`
 }
@@ -67,7 +70,6 @@ type SubnetList struct {
 type IpPool struct {
 	Start string `json:"Start"`
 	End   string `json:"End"`
-	Mask  uint8  `json:"Mask"`
 }
 
 func init() {

@@ -1,0 +1,8 @@
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: ipv4-subnet1-route
+spec:
+  Prefix: "192.168.0.2"
+  Mask: 24
+  NextHop: "10.10.1.1"

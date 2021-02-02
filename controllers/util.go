@@ -56,8 +56,15 @@ func (r *L2ServiceAttachmentReconciler) DefineNetAttachDef(ctx context.Context, 
 		}
 		l2srvObjs = append(l2srvObjs, tempObj)
 	}
+
+	//Get one or more subnet resources. Its an optional attribute.
+	subnetObjs, err := r.getSubnetObjs(ctx, l2srvObjs, log)
+
+	//Get one or more route resources. Its an optional attribute.
+	routeObjs, err := r.getRouteObjs(ctx, subnetObjs, log)
+
 	// Initiate L2ServiceAttachment Parser
-	l2srvAttParser := l2serviceattachmentparser.NewL2SrvAttParser(s, l2srvObjs, cp, r.Config, r.CniMap, log)
+	l2srvAttParser := l2serviceattachmentparser.NewL2SrvAttParser(s, l2srvObjs, cp, subnetObjs, routeObjs, r.Config, r.CniMap, log)
 	// Parse the resources and fill the data
 	manifestFolder, err := l2srvAttParser.ParseL2ServiceAttachment(&data)
 	if err != nil {
@@ -75,4 +82,34 @@ func (r *L2ServiceAttachmentReconciler) DefineNetAttachDef(ctx context.Context, 
 
 	ctrl.SetControllerReference(s, objs[0], r.Scheme)
 	return objs[0], nil
+}
+
+func (r *L2ServiceAttachmentReconciler) getSubnetObjs(ctx context.Context, l2srvs []*enov1alpha1.L2Service, log logr.Logger) ([]*enov1alpha1.Subnet, error) {
+	var subnetObjs []*enov1alpha1.Subnet
+	for _, l2srv := range l2srvs {
+		for _, subnetName := range l2srv.Spec.Subnets {
+			tempObj := &enov1alpha1.Subnet{}
+			if err := r.Get(ctx, types.NamespacedName{Name: subnetName}, tempObj); err != nil {
+				log.Error(err,"Failed to find Subnet ", "subnetName: ", subnetName)
+				return nil, err
+			}
+			subnetObjs = append(subnetObjs, tempObj)
+		}
+	}
+	return subnetObjs, nil
+}
+
+func (r *L2ServiceAttachmentReconciler) getRouteObjs(ctx context.Context, subnets []*enov1alpha1.Subnet, log logr.Logger) ([]*enov1alpha1.Route, error) {
+	var routeObjs []*enov1alpha1.Route
+	for _, subnet := range subnets {
+		for _, routeName := range subnet.Spec.Routes {
+			tempObj := &enov1alpha1.Route{}
+			if err := r.Get(ctx, types.NamespacedName{Name: routeName}, tempObj); err != nil {
+				log.Error(err,"Failed to find Route ", "routeName: ",routeName)
+				return nil, err
+			}
+			routeObjs = append(routeObjs, tempObj)
+		}
+	}
+	return routeObjs, nil
 }

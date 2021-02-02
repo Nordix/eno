@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Nordix/eno/pkg/cni/cniconfig"
+	"github.com/Nordix/eno/pkg/parser"
 
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/Nordix/eno/pkg/cni"
@@ -17,23 +18,28 @@ import (
 
 // L2SrvAttParser instance
 type L2SrvAttParser struct {
-	srvAttResource *enov1alpha1.L2ServiceAttachment
-	cpResource     *enov1alpha1.ConnectionPoint
-	l2srvResources []*enov1alpha1.L2Service
-	config         *config.Configuration
+	srvAttResource  *enov1alpha1.L2ServiceAttachment
+	cpResource      *enov1alpha1.ConnectionPoint
+	l2srvResources  []*enov1alpha1.L2Service
+	subnetResources []*enov1alpha1.Subnet
+	routeResources  []*enov1alpha1.Route
+	config          *config.Configuration
 	cniMapping     map[string]cni.Cnier
-	log            logr.Logger
+	log             logr.Logger
 }
 
 // NewL2SrvAttParser - creates instance of L2SrvAttParser
 func NewL2SrvAttParser(srvAttObj *enov1alpha1.L2ServiceAttachment, l2srvObjs []*enov1alpha1.L2Service,
-	cpObj *enov1alpha1.ConnectionPoint, c *config.Configuration, mc map[string]cni.Cnier, logger logr.Logger) *L2SrvAttParser {
+	cpObj *enov1alpha1.ConnectionPoint, subnetObjs []*enov1alpha1.Subnet,
+	routeObjs []*enov1alpha1.Route, c *config.Configuration, mc map[string]cni.Cnier, logger logr.Logger) *L2SrvAttParser {
 	return &L2SrvAttParser{srvAttResource: srvAttObj,
-		cpResource:     cpObj,
-		l2srvResources: l2srvObjs,
-		config:         c,
+		cpResource:      cpObj,
+		l2srvResources:  l2srvObjs,
+		subnetResources: subnetObjs,
+		routeResources: routeObjs,
+		config:          c,
 		cniMapping:     mc,
-		log:            logger}
+		log:             logger}
 }
 
 // ParseL2ServiceAttachment - parses a L2ServiceAttachment Resource
@@ -46,7 +52,7 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 
 	cniToUse, err := sattp.pickCni()
 	if err != nil {
-		sattp.log.Error(err, "Error occured while picking cni")
+		sattp.log.Error(err, "Error occurred while picking cni")
 		return "", err
 	}
 
@@ -56,6 +62,22 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 	if err != nil {
 		sattp.log.Error(err, "Error occured while handling cni")
 		return "", err
+	}
+	//TODO change picking one subnet if required
+	if len(sattp.subnetResources) > 0 {
+		sp := parser.NewSubnetParser(sattp.subnetResources[0], sattp.log)
+		if err := sp.ValidateSubnet(); err != nil {
+			return "", err
+		}
+		if err := sp.ValidateRoute(sattp.routeResources); err != nil {
+			return "", err
+		}
+
+		cniObj := sp.PickIpamCni(sattp.routeResources)
+
+		if err := cniObj.HandleIpam(d); err != nil {
+			return "", err
+		}
 	}
 
 	return manifestFolder, nil

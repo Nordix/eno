@@ -36,25 +36,28 @@ spec:
         spec:
           description: SubnetSpec defines the desired state of Subnet
           properties:
-            Addresses:
+            Address:
+              type: string
+            AllocationPool:
               items:
                 properties:
                   End:
                     type: string
-                  Mask:
-                    type: integer
                   Start:
                     type: string
                 required:
                 - End
-                - Mask
                 - Start
                 type: object
               type: array
             DNS:
               type: string
             Ipam:
+              enum:
+              - whereabouts
               type: string
+            Mask:
+              type: integer
             Routes:
               items:
                 type: string
@@ -65,8 +68,10 @@ spec:
               - v6
               type: string
           required:
-          - Addresses
+          - Address
+          - AllocationPool
           - Ipam
+          - Mask
           - Type
           type: object
         status:
