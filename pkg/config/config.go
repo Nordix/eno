@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/Nordix/eno/pkg/cni"
 	"github.com/Nordix/eno/pkg/common"
 
 	"gopkg.in/yaml.v2"
@@ -64,7 +65,7 @@ func (c *Configuration) validateConfiguration() error {
 		return err
 	}
 
-	if !common.SearchInSlice(c.KernelCni, common.GetKernelSupportedCnis()) {
+	if !common.SearchInSlice(c.KernelCni, cni.GetKernelSupportedCnis()) {
 		err := fmt.Errorf(" %s cni is not supported currently", c.KernelCni)
 		return err
 	}

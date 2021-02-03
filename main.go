@@ -29,6 +29,7 @@ import (
 
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/Nordix/eno/controllers"
+	"github.com/Nordix/eno/pkg/cni"
 	"github.com/Nordix/eno/pkg/config"
 	nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	// +kubebuilder:scaffold:imports
@@ -80,11 +81,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	mapOfCnis := cni.RegisterCnis()
+
 	if err = (&controllers.L2ServiceAttachmentReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("L2ServiceAttachment"),
 		Scheme: mgr.GetScheme(),
 		Config: cfg,
+		CniMap: mapOfCnis,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L2ServiceAttachment")
 		os.Exit(1)

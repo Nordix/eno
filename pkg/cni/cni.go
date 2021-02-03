@@ -5,80 +5,71 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Nordix/eno/pkg/cni/cniconfig"
+
 	"github.com/Nordix/eno/pkg/render"
-	"github.com/go-logr/logr"
 )
 
 // Cnier is an interface for Cnis (e.g. ovs-cni, host-device-cni)
 type Cnier interface {
-	HandleCni(d *render.RenderData) error
+	HandleCni(cniConf *cniconfig.CniConfig, d *render.RenderData) (string, error)
 }
 
 // OvsCni instance
-type OvsCni struct {
-	VlanIds  []uint16
-	VlanType string
-	Log      logr.Logger
-}
+type OvsCni struct{}
 
 // NewOvsCni - creates an instance of OvsCni struct
-func NewOvsCni(vlans []uint16, typeOfVlan string, logger logr.Logger) *OvsCni {
-	return &OvsCni{VlanIds: vlans,
-		VlanType: typeOfVlan,
-		Log:      logger}
+func NewOvsCni() *OvsCni {
+	return &OvsCni{}
 }
 
 // HandleCni - Handles the ovs-cni case
-func (ovscni *OvsCni) HandleCni(d *render.RenderData) error {
-
+func (ovscni *OvsCni) HandleCni(cniConf *cniconfig.CniConfig, d *render.RenderData) (string, error) {
+	manifestFolder := "ovs_netattachdef"
 	//For VlanType=trunk we do not need to do anything
-	switch ovscni.VlanType {
+	switch cniConf.VlanType {
 	case "access":
-		if len(ovscni.VlanIds) != 1 {
+		if len(cniConf.VlanIds) != 1 {
 			err := errors.New("Cannot use more than one Vlan for VlanType=access case")
-			ovscni.Log.Error(err, "L2Services cannot contain more than one Vlan in VlanType=access case")
-			return err
+			cniConf.Log.Error(err, "L2Services cannot contain more than one Vlan in VlanType=access case")
+			return "", err
 		}
-		d.Data["AccessVlan"] = ovscni.VlanIds[0]
+		d.Data["AccessVlan"] = cniConf.VlanIds[0]
 	case "selectivetrunk":
 		tmpList := []string{}
-		for _, vlanId := range ovscni.VlanIds {
-			tmpStr := "{\"id\": " + strconv.Itoa(int(vlanId)) + "}"
+		for _, vlanID := range cniConf.VlanIds {
+			tmpStr := "{\"id\": " + strconv.Itoa(int(vlanID)) + "}"
 			tmpList = append(tmpList, tmpStr)
 		}
 		d.Data["SelectiveVlan"] = "[" + strings.Join(tmpList, ",") + "]"
 	case "trunk":
-		ovscni.Log.Info("Transparent Trunk case in cluster level")
+		cniConf.Log.Info("Transparent Trunk case in cluster level")
 	}
-	return nil
+	return manifestFolder, nil
 }
 
 // HostDevCni instance
-type HostDevCni struct {
-	VlanType string
-	Log      logr.Logger
-}
+type HostDevCni struct{}
 
 // NewHostDevCni - creates an instance of HostDevCni struct
-func NewHostDevCni(typeOfVlan string, logger logr.Logger) *HostDevCni {
-	return &HostDevCni{VlanType: typeOfVlan,
-		Log: logger}
+func NewHostDevCni() *HostDevCni {
+	return &HostDevCni{}
 }
 
 // HandleCni - Handles the host-device-cni case
-func (hdcni *HostDevCni) HandleCni(d *render.RenderData) error {
-
-	switch hdcni.VlanType {
+func (hdcni *HostDevCni) HandleCni(cniConf *cniconfig.CniConfig, d *render.RenderData) (string, error) {
+	manifestFolder := "host-device_netattachdef"
+	switch cniConf.VlanType {
 	case "access":
 		err := errors.New("Host-device cni does not support VlanType=access")
-		hdcni.Log.Error(err, "Host-device VlanType error")
-		return err
+		cniConf.Log.Error(err, "Host-device VlanType error")
+		return "", err
 	case "selectivetrunk":
 		err := errors.New("Host-device cni does not support VlanType=selectivetrunk")
-		hdcni.Log.Error(err, "Host-device VlanType error")
-		return err
+		cniConf.Log.Error(err, "Host-device VlanType error")
+		return "", err
 	case "trunk":
-		hdcni.Log.Info("Transparent Trunk case in Host-device cni")
+		cniConf.Log.Info("Transparent Trunk case in Host-device cni")
 	}
-	return nil
+	return manifestFolder, nil
 }

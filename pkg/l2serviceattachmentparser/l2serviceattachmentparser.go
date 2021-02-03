@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Nordix/eno/pkg/cni/cniconfig"
+
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/Nordix/eno/pkg/cni"
 	"github.com/Nordix/eno/pkg/common"
@@ -19,22 +21,23 @@ type L2SrvAttParser struct {
 	cpResource     *enov1alpha1.ConnectionPoint
 	l2srvResources []*enov1alpha1.L2Service
 	config         *config.Configuration
+	cniMapping     map[string]cni.Cnier
 	log            logr.Logger
 }
 
 // NewL2SrvAttParser - creates instance of L2SrvAttParser
 func NewL2SrvAttParser(srvAttObj *enov1alpha1.L2ServiceAttachment, l2srvObjs []*enov1alpha1.L2Service,
-	cpObj *enov1alpha1.ConnectionPoint, c *config.Configuration, logger logr.Logger) *L2SrvAttParser {
+	cpObj *enov1alpha1.ConnectionPoint, c *config.Configuration, mc map[string]cni.Cnier, logger logr.Logger) *L2SrvAttParser {
 	return &L2SrvAttParser{srvAttResource: srvAttObj,
 		cpResource:     cpObj,
 		l2srvResources: l2srvObjs,
 		config:         c,
+		cniMapping:     mc,
 		log:            logger}
 }
 
 // ParseL2ServiceAttachment - parses a L2ServiceAttachment Resource
 func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (string, error) {
-	var manifestFolder string
 	// Initiate Parsers
 	cpParser := connectionpointparser.NewCpParser(sattp.cpResource, sattp.log)
 
@@ -47,9 +50,10 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 		return "", err
 	}
 
-	manifestFolder, cniObj := sattp.instantiateCni(cniToUse)
-
-	if err := cniObj.HandleCni(d); err != nil {
+	cniObj := sattp.cniMapping[cniToUse]
+	cniConfigObj := sattp.instantiateCniConfig()
+	manifestFolder, err := cniObj.HandleCni(cniConfigObj, d)
+	if err != nil {
 		sattp.log.Error(err, "Error occured while handling cni")
 		return "", err
 	}
@@ -72,7 +76,7 @@ func (sattp *L2SrvAttParser) pickCni() (string, error) {
 		}
 	} else {
 		if sattp.srvAttResource.Spec.PodInterfaceType == "kernel" {
-			if !common.SearchInSlice(sattp.srvAttResource.Spec.Implementation, common.GetKernelSupportedCnis()) {
+			if !common.SearchInSlice(sattp.srvAttResource.Spec.Implementation, cni.GetKernelSupportedCnis()) {
 				err := fmt.Errorf(" %s cni is not supported currently", sattp.srvAttResource.Spec.Implementation)
 				sattp.log.Error(err, "Error occured while picking cni to use")
 				return "", err
@@ -87,21 +91,10 @@ func (sattp *L2SrvAttParser) pickCni() (string, error) {
 	return cniToUse, nil
 }
 
-// instantiateCni - Instantiate the CNI object to be used
-func (sattp *L2SrvAttParser) instantiateCni(cniToUse string) (string, cni.Cnier) {
-	var cniObj cni.Cnier
-	var manifestFolder string
-	switch cniToUse {
-	case "ovs":
-		segIds := sattp.getSegIds()
-		cniObj = cni.NewOvsCni(segIds, sattp.srvAttResource.Spec.VlanType, sattp.log)
-		manifestFolder = "ovs_netattachdef"
-	case "host-device":
-		cniObj = cni.NewHostDevCni(sattp.srvAttResource.Spec.VlanType, sattp.log)
-		manifestFolder = "host-device_netattachdef"
-	}
-	return manifestFolder, cniObj
-
+// instantiateCniConfig - Instantiate the CniConfig object to be used
+func (sattp *L2SrvAttParser) instantiateCniConfig() *cniconfig.CniConfig {
+	segIds := sattp.getSegIds()
+	return cniconfig.NewCniConfig(segIds, sattp.srvAttResource.Spec.VlanType, sattp.log)
 }
 
 // getSegIds - returns a list with the segmentation Ids
