@@ -1,0 +1,147 @@
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-ten
+spec:
+  Address: "10.10.10.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.10.10","End":"10.10.10.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-ten"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-eleven
+spec:
+  Address: "10.10.11.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.11.10","End":"10.10.11.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-eleven"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-twelve
+spec:
+  Address: "10.10.12.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.12.10","End":"10.10.12.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-twelve"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-thirteen
+spec:
+  Address: "10.10.13.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.13.10","End":"10.10.13.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-thirteen"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-fourteen
+spec:
+  Address: "10.10.14.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.14.10","End":"10.10.14.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-fourteen"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-fifteen
+spec:
+  Address: "10.10.15.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.15.10","End":"10.10.15.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-fifteen"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-sixteen
+spec:
+  Address: "10.10.16.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.16.10","End":"10.10.16.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-sixteen"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-seventeen
+spec:
+  Address: "10.10.17.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.17.10","End":"10.10.17.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-seventeen"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-eighteen
+spec:
+  Address: "10.10.18.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.18.10","End":"10.10.18.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-eighteen"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-nineteen
+spec:
+  Address: "10.10.19.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.19.10","End":"10.10.19.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-nineteen"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv4-subnet-twenty
+spec:
+  Address: "10.10.20.0"
+  Mask: 24
+  AllocationPool: [{"Start":"10.10.20.10","End":"10.10.20.255"}]
+  Ipam: "whereabouts"
+  Routes: ["route-twenty"]
+  Dns:
+    Nameservers: ["8.8.8.8"]
+    Domain: "example.com"
+    Search: ["example.com"]
+  Type: "v4"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv6-subnet-twenty
+spec:
+  Address: "2001::"
+  Mask: 64
+  AllocationPool: [{"Start":"2001::10","End":"2001::100"}]
+  Ipam: "whereabouts"
+  Routes: ["route-twenty-ipv6"]
+  Type: "v6"

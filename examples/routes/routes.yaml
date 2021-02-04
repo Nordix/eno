@@ -1,8 +1,107 @@
 apiVersion: eno.k8s.io/v1alpha1
 kind: Route
 metadata:
-  name: ipv4-subnet1-route
+  name: route-ten
 spec:
-  Prefix: "192.168.0.0"
+  Prefix: "30.30.10.0"
   Mask: 24
-  NextHop: "10.10.1.1"
+  NextHop: "10.10.10.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-eleven
+spec:
+  Prefix: "30.30.11.0"
+  Mask: 24
+  NextHop: "10.10.11.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-twelve
+spec:
+  Prefix: "30.30.12.0"
+  Mask: 24
+  NextHop: "10.10.12.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-thirteen
+spec:
+  Prefix: "30.30.13.0"
+  Mask: 24
+  NextHop: "10.10.13.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-fourteen
+spec:
+  Prefix: "30.30.14.0"
+  Mask: 24
+  NextHop: "10.10.14.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-fifteen
+spec:
+  Prefix: "30.30.15.0"
+  Mask: 24
+  NextHop: "10.10.15.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-sixteen
+spec:
+  Prefix: "30.30.16.0"
+  Mask: 24
+  NextHop: "10.10.16.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-seventeen
+spec:
+  Prefix: "30.30.17.0"
+  Mask: 24
+  NextHop: "10.10.17.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-eighteen
+spec:
+  Prefix: "30.30.18.0"
+  Mask: 24
+  NextHop: "10.10.18.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-nineteen
+spec:
+  Prefix: "30.30.19.0"
+  Mask: 24
+  NextHop: "10.10.19.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-twenty
+spec:
+  Prefix: "30.30.20.0"
+  Mask: 24
+  NextHop: "10.10.20.1"
+---
+apiVersion: eno.k8s.io/v1alpha1
+kind: Route
+metadata:
+  name: route-twenty-ipv6
+spec:
+  Prefix: "2002::"
+  Mask: 64
+  NextHop: "2001::1"
