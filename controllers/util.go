@@ -59,9 +59,17 @@ func (r *L2ServiceAttachmentReconciler) DefineNetAttachDef(ctx context.Context, 
 
 	//Get one or more subnet resources. Its an optional attribute.
 	subnetObjs, err := r.getSubnetObjs(ctx, l2srvObjs, log)
+	if err != nil {
+		log.Error(err, "Error occurred while fetching Subnet resources")
+		return nil, err
+	}
 
 	//Get one or more route resources. Its an optional attribute.
 	routeObjs, err := r.getRouteObjs(ctx, subnetObjs, log)
+	if err != nil {
+		log.Error(err, "Error occurred while fetching Route resources")
+		return nil, err
+	}
 
 	// Initiate L2ServiceAttachment Parser
 	l2srvAttParser := l2serviceattachmentparser.NewL2SrvAttParser(s, l2srvObjs, cp, subnetObjs, routeObjs, r.Config, r.CniMap, log)
@@ -90,7 +98,7 @@ func (r *L2ServiceAttachmentReconciler) getSubnetObjs(ctx context.Context, l2srv
 		for _, subnetName := range l2srv.Spec.Subnets {
 			tempObj := &enov1alpha1.Subnet{}
 			if err := r.Get(ctx, types.NamespacedName{Name: subnetName}, tempObj); err != nil {
-				log.Error(err,"Failed to find Subnet ", "subnetName: ", subnetName)
+				log.Error(err, "Failed to find Subnet ", "subnetName: ", subnetName)
 				return nil, err
 			}
 			subnetObjs = append(subnetObjs, tempObj)
@@ -105,7 +113,7 @@ func (r *L2ServiceAttachmentReconciler) getRouteObjs(ctx context.Context, subnet
 		for _, routeName := range subnet.Spec.Routes {
 			tempObj := &enov1alpha1.Route{}
 			if err := r.Get(ctx, types.NamespacedName{Name: routeName}, tempObj); err != nil {
-				log.Error(err,"Failed to find Route ", "routeName: ",routeName)
+				log.Error(err, "Failed to find Route ", "routeName: ", routeName)
 				return nil, err
 			}
 			routeObjs = append(routeObjs, tempObj)
