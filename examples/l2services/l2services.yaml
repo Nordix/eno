@@ -28,6 +28,7 @@ metadata:
   name: l2service-thirteen
 spec:
   SegmentationID: 13
+  Subnets: ["ipv6-subnet","ipv4-subnet"] 
   PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1

@@ -3,7 +3,6 @@ package parser
 import (
 	"bytes"
 	"fmt"
-	"github.com/Nordix/eno/pkg/cni"
 	"net"
 
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
@@ -20,7 +19,6 @@ func NewSubnetParser(subnetObj *enov1alpha1.Subnet, logger logr.Logger) *SubnetP
 	return &SubnetParser{subnetResource: subnetObj,
 		log: logger}
 }
-
 
 func (sp *SubnetParser) ValidateSubnet() error {
 	ipStr := sp.subnetResource.Spec.Address
@@ -89,24 +87,8 @@ func (sp *SubnetParser) validateAllocationPool(cidr string, ipPools []enov1alpha
 
 func (sp *SubnetParser) ValidateRoute(routes []*enov1alpha1.Route) error {
 	rp := NewRouteParser(sp.subnetResource, routes, sp.log)
-	if err :=rp.ValidateRoute(); err!= nil {
+	if err := rp.ValidateRoute(); err != nil {
 		return err
 	}
 	return nil
-}
-
-func (sp *SubnetParser) PickIpamCni(routes []*enov1alpha1.Route) cni.Ipam {
-	var cniObj cni.Ipam
-	switch sp.subnetResource.Spec.Ipam {
-	case "whereabouts":
-		ipStr := sp.subnetResource.Spec.Address
-		ipPool := sp.subnetResource.Spec.AllocationPool
-		ipAddr := net.ParseIP(ipStr)
-		mask := sp.subnetResource.Spec.Mask
-		dns := sp.subnetResource.Spec.DNS
-		cniObj = cni.NewWhereAboutsIpam(ipAddr, mask, ipPool, routes, dns, sp.log)
-	default:
-		sp.log.Info("unsupported ipam type")
-	}
-	return cniObj
 }

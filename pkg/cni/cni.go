@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-logr/logr"
-	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"net"
 	"strconv"
 	"strings"
+
+	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 
 	"github.com/Nordix/eno/pkg/cni/cniconfig"
 
@@ -17,20 +17,11 @@ import (
 
 // Ipam is an interface for IPAM Cnis
 type Ipam interface {
-	HandleIpam(d *render.RenderData) error
+	HandleIpam(cniConf *cniconfig.IpamConfig, d *render.RenderData) error
 }
 
-// WhereAboutsIpam instance
-type WhereAboutsIpam struct {
-	Address   net.IP
-	Mask      int16
-	allocPool []enov1alpha1.IpPool
-	Routes    []*enov1alpha1.Route
-	Dns string
-	log       logr.Logger
-}
+type WhereAboutsIpam struct{}
 
-// WhereAboutsIpam instance
 type WhereAboutsIpamJson struct {
 	Range  string  `json:"range,omitempty"`
 	Type   string  `json:"type,omitempty"`
@@ -44,34 +35,34 @@ type Route struct {
 }
 
 //NewWhereAboutsIpam creates instance of WhereAbouts cni
-func NewWhereAboutsIpam(address net.IP, mask int16, ipPools []enov1alpha1.IpPool, routes []*enov1alpha1.Route, dns string, logger logr.Logger) *WhereAboutsIpam {
-	return &WhereAboutsIpam{Address: address,
-		Mask:      mask,
-		allocPool: ipPools,
-		Routes: routes,
-		Dns: dns,
-		log:       logger}
+func NewWhereAboutsIpam() *WhereAboutsIpam {
+	return &WhereAboutsIpam{}
 }
 
-func (ipam *WhereAboutsIpam) HandleIpam(d *render.RenderData) error {
-	if len(ipam.allocPool) > 1 {
-		err := fmt.Errorf("more than one range not supported for WhereAbouts cni")
-		ipam.log.Error(err, "")
+func (ipam *WhereAboutsIpam) HandleIpam(cniConf *cniconfig.IpamConfig, d *render.RenderData) error {
+
+	ipStr := cniConf.Subnets[0].Spec.Address
+	ipPool := cniConf.Subnets[0].Spec.AllocationPool
+	ipAddr := net.ParseIP(ipStr)
+	mask := cniConf.Subnets[0].Spec.Mask
+	dns := cniConf.Subnets[0].Spec.DNS
+	if len(ipPool) > 1 {
+		err := errors.New("more than one ip range not supported by WhereAbouts cni")
+		cniConf.Log.Error(err, "")
 		return err
 	}
 
-	AddrRange := formatAllocationPool(ipam.allocPool[0])
 	var ipamObj WhereAboutsIpamJson
 	ipamObj.Type = "whereabouts"
-	if AddrRange != "" {
-		ipamObj.Range = AddrRange + "/" + fmt.Sprint(ipam.Mask)
+	if len(ipPool) != 0 {
+		ipamObj.Range = formatAllocationPool(ipPool[0]) + "/" + fmt.Sprint(mask)
 	} else {
-		ipamObj.Range = ipam.Address.String() + "/" + fmt.Sprint(ipam.Mask)
+		ipamObj.Range = ipAddr.String() + "/" + fmt.Sprint(mask)
 	}
 
 	//Populate Routes
-	if len(ipam.Routes) > 0 {
-		for _, cfgRoute := range ipam.Routes {
+	if len(cniConf.Routes[cniConf.Subnets[0].GetName()]) > 0 {
+		for _, cfgRoute := range cniConf.Routes[cniConf.Subnets[0].GetName()] {
 			routePrefix := cfgRoute.Spec.Prefix + "/" + fmt.Sprint(cfgRoute.Spec.Mask)
 			route := Route{Destination: routePrefix, Gateway: cfgRoute.Spec.NextHop}
 			ipamObj.Routes = append(ipamObj.Routes, route)
@@ -79,15 +70,15 @@ func (ipam *WhereAboutsIpam) HandleIpam(d *render.RenderData) error {
 	}
 
 	//Populate dns json string
-	ipamObj.Dns = ipam.Dns
-
+	//TODO: use modified model for dns
+	ipamObj.Dns = dns
 	marshalledConfig, err := json.Marshal(ipamObj)
 	if err != nil {
-		ipam.log.Error(err, "Error marshalling ipam config")
+		cniConf.Log.Error(err, "Error marshalling ipam config")
 		return err
 	}
 	d.Data["Ipam"] = string(marshalledConfig)
-	ipam.log.Info("Ipam config populated:", "config", d.Data["Ipam"])
+	cniConf.Log.Info("Ipam config populated:", "config", d.Data["Ipam"])
 	return nil
 }
 

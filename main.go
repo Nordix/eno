@@ -82,13 +82,15 @@ func main() {
 	}
 
 	mapOfCnis := cni.RegisterCnis()
+	mapOfIpams := cni.RegisterIpams()
 
 	if err = (&controllers.L2ServiceAttachmentReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("L2ServiceAttachment"),
-		Scheme: mgr.GetScheme(),
-		Config: cfg,
-		CniMap: mapOfCnis,
+		Client:  mgr.GetClient(),
+		Log:     ctrl.Log.WithName("controllers").WithName("L2ServiceAttachment"),
+		Scheme:  mgr.GetScheme(),
+		Config:  cfg,
+		CniMap:  mapOfCnis,
+		IpamMap: mapOfIpams,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L2ServiceAttachment")
 		os.Exit(1)

@@ -37,10 +37,11 @@ import (
 // L2ServiceAttachmentReconciler reconciles a L2ServiceAttachment object
 type L2ServiceAttachmentReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
-	Config *config.Configuration
-	CniMap map[string]cni.Cnier
+	Log     logr.Logger
+	Scheme  *runtime.Scheme
+	Config  *config.Configuration
+	CniMap  map[string]cni.Cnier
+	IpamMap map[string]cni.Ipam
 }
 
 // +kubebuilder:rbac:groups=eno.k8s.io,resources=l2serviceattachments,verbs=get;list;watch;create;update;patch;delete
