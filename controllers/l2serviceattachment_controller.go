@@ -37,16 +37,16 @@ import (
 // L2ServiceAttachmentReconciler reconciles a L2ServiceAttachment object
 type L2ServiceAttachmentReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
-	Config *config.Configuration
-	CniMap map[string]cni.Cnier
+	Log     logr.Logger
+	Scheme  *runtime.Scheme
+	Config  *config.Configuration
+	CniMap  map[string]cni.Cnier
+	IpamMap map[string]cni.Ipam
 }
 
 // +kubebuilder:rbac:groups=eno.k8s.io,resources=l2serviceattachments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eno.k8s.io,resources=l2serviceattachments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=eno.k8s.io,resources=connectionpoints;l2services,verbs=get;list;watch
-// +kubebuilder:rbac:groups=eno.k8s.io,resources=connectionpoints,verbs=get;list
+// +kubebuilder:rbac:groups=eno.k8s.io,resources=connectionpoints;l2services;subnets;routes,verbs=get;list;watch
 // +kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=*,verbs=*
 
 func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {

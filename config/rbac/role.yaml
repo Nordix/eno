@@ -10,14 +10,9 @@ rules:
   - eno.k8s.io
   resources:
   - connectionpoints
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - eno.k8s.io
-  resources:
-  - connectionpoints
   - l2services
+  - routes
+  - subnets
   verbs:
   - get
   - list

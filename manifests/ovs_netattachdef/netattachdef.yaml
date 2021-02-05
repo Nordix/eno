@@ -16,4 +16,7 @@ spec:
     "trunk": {{.SelectiveVlan}},
 {{end}}
     "bridge": "{{.NetObjName}}"
+{{if (index . "Ipam") }}
+    ,"ipam" :{{.Ipam}}
+{{end}}
   }'
