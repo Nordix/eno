@@ -32,7 +32,7 @@ type SubnetSpec struct {
 	Ipam           string   `json:"Ipam"`
 	Address        string   `json:"Address"`
 	Mask           int16    `json:"Mask"`
-	AllocationPool []IpPool `json:"AllocationPool"`
+	AllocationPool []IPPool `json:"AllocationPool"`
 	Routes         []string `json:"Routes,omitempty"`
 	DNS            string   `json:"DNS,omitempty"`
 	// +kubebuilder:validation:Enum=v4;v6
@@ -67,7 +67,8 @@ type SubnetList struct {
 	Items           []Subnet `json:"items"`
 }
 
-type IpPool struct {
+// IPPool contains an ip range
+type IPPool struct {
 	Start string `json:"Start"`
 	End   string `json:"End"`
 }

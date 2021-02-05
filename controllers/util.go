@@ -64,7 +64,7 @@ func (r *L2ServiceAttachmentReconciler) DefineNetAttachDef(ctx context.Context, 
 	var routesMap map[string][]*v1alpha1.Route
 	if s.Spec.VlanType == "access" {
 		if len(l2srvObjs) > 1 {
-			err := errors.New("Number of L2Services for access vlan type cannot be more than 1")
+			err := errors.New("number of L2Services for access vlan type cannot be more than 1")
 			log.Error(err, "")
 			return nil, err
 		}

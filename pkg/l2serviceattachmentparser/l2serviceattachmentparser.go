@@ -71,12 +71,12 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 		for i, subnet := range sattp.subnetResources {
 			if i > 0 {
 				if ipType == subnet.Spec.Type {
-					err := errors.New("Subnets in one L2Service should not be of same ip type")
+					err := errors.New("subnets in one L2Service should not be of same ip type")
 					sattp.log.Error(err, "")
 					return "", err
 				}
 				if ipamType != subnet.Spec.Ipam {
-					err := errors.New("Subnets in one L2Service should have same ipam type")
+					err := errors.New("subnets in one L2Service should have same ipam type")
 					sattp.log.Error(err, "")
 					return "", err
 				}

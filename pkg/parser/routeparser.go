@@ -11,16 +11,18 @@ import (
 // RouteParser instance
 type RouteParser struct {
 	SubnetResource *enov1alpha1.Subnet
-	RouteResource []*enov1alpha1.Route
+	RouteResource  []*enov1alpha1.Route
 	log            logr.Logger
 }
 
+// NewRouteParser parses Route resources
 func NewRouteParser(subnetObj *enov1alpha1.Subnet, routes []*enov1alpha1.Route, logger logr.Logger) *RouteParser {
 	return &RouteParser{SubnetResource: subnetObj,
 		RouteResource: routes,
-		log: logger}
+		log:           logger}
 }
 
+// ValidateRoute validates Route
 func (sp *RouteParser) ValidateRoute() error {
 	mask := sp.SubnetResource.Spec.Mask
 	cidr := sp.SubnetResource.Spec.Address + "/" + fmt.Sprint(mask)
@@ -40,6 +42,3 @@ func (sp *RouteParser) ValidateRoute() error {
 	}
 	return nil
 }
-
-
-

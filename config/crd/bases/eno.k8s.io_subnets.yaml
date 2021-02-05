@@ -40,6 +40,7 @@ spec:
               type: string
             AllocationPool:
               items:
+                description: IPPool contains an ip range
                 properties:
                   End:
                     type: string

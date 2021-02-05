@@ -20,16 +20,17 @@ type Ipam interface {
 	HandleIpam(ipamConf *cniconfig.IpamConfig, d *render.RenderData) error
 }
 
+// WhereAboutsIpam instance
 type WhereAboutsIpam struct{}
 
-type WhereAboutsIpamJson struct {
+type whereAboutsIpamJSON struct {
 	Range  string  `json:"range,omitempty"`
 	Type   string  `json:"type,omitempty"`
-	Routes []Route `json:"routes,omitempty"`
-	Dns    string  `json:"dns,omitempty"`
+	Routes []route `json:"routes,omitempty"`
+	DNS    string  `json:"dns,omitempty"`
 }
 
-type Route struct {
+type route struct {
 	Destination string `json:"dst,omitempty"`
 	Gateway     string `json:"gw,omitempty"`
 }
@@ -39,6 +40,7 @@ func NewWhereAboutsIpam() *WhereAboutsIpam {
 	return &WhereAboutsIpam{}
 }
 
+// HandleIpam - Handles the whereabouts ipam cni case
 func (ipam *WhereAboutsIpam) HandleIpam(ipamConf *cniconfig.IpamConfig, d *render.RenderData) error {
 
 	ipStr := ipamConf.Subnets[0].Spec.Address
@@ -52,7 +54,7 @@ func (ipam *WhereAboutsIpam) HandleIpam(ipamConf *cniconfig.IpamConfig, d *rende
 		return err
 	}
 
-	var ipamObj WhereAboutsIpamJson
+	var ipamObj whereAboutsIpamJSON
 	ipamObj.Type = "whereabouts"
 	if len(ipPool) != 0 {
 		ipamObj.Range = formatAllocationPool(ipPool[0]) + "/" + fmt.Sprint(mask)
@@ -64,14 +66,14 @@ func (ipam *WhereAboutsIpam) HandleIpam(ipamConf *cniconfig.IpamConfig, d *rende
 	if len(ipamConf.Routes[ipamConf.Subnets[0].GetName()]) > 0 {
 		for _, cfgRoute := range ipamConf.Routes[ipamConf.Subnets[0].GetName()] {
 			routePrefix := cfgRoute.Spec.Prefix + "/" + fmt.Sprint(cfgRoute.Spec.Mask)
-			route := Route{Destination: routePrefix, Gateway: cfgRoute.Spec.NextHop}
+			route := route{Destination: routePrefix, Gateway: cfgRoute.Spec.NextHop}
 			ipamObj.Routes = append(ipamObj.Routes, route)
 		}
 	}
 
 	//Populate dns json string
 	//TODO: use modified model for dns
-	ipamObj.Dns = dns
+	ipamObj.DNS = dns
 	marshalledConfig, err := json.Marshal(ipamObj)
 	if err != nil {
 		ipamConf.Log.Error(err, "Error marshalling ipam config")
@@ -146,6 +148,6 @@ func (hdcni *HostDevCni) HandleCni(cniConf *cniconfig.CniConfig, d *render.Rende
 	return manifestFolder, nil
 }
 
-func formatAllocationPool(ipRange enov1alpha1.IpPool) string {
+func formatAllocationPool(ipRange enov1alpha1.IPPool) string {
 	return ipRange.Start + "-" + ipRange.End
 }
