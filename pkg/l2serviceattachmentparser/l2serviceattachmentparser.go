@@ -67,10 +67,6 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 	}
 
 	if len(sattp.subnetResources) > 0 {
-		if len(sattp.subnetResources) > 2 {
-			err := errors.New("More than 2 subnets are not supported for a L2Service")
-			sattp.log.Error(err, "")
-		}
 		var ipType, ipamType string
 		for i, subnet := range sattp.subnetResources {
 			if i > 0 {
@@ -96,8 +92,8 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 			}
 		}
 		ipam := sattp.ipamMapping[ipamType]
-		cniConfigObj := sattp.instantiateIpamConfig()
-		if err := ipam.HandleIpam(cniConfigObj, d); err != nil {
+		ipamConfigObj := sattp.instantiateIpamConfig()
+		if err := ipam.HandleIpam(ipamConfigObj, d); err != nil {
 			return "", err
 		}
 	}

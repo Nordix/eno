@@ -17,7 +17,7 @@ import (
 
 // Ipam is an interface for IPAM Cnis
 type Ipam interface {
-	HandleIpam(cniConf *cniconfig.IpamConfig, d *render.RenderData) error
+	HandleIpam(ipamConf *cniconfig.IpamConfig, d *render.RenderData) error
 }
 
 type WhereAboutsIpam struct{}
@@ -39,16 +39,16 @@ func NewWhereAboutsIpam() *WhereAboutsIpam {
 	return &WhereAboutsIpam{}
 }
 
-func (ipam *WhereAboutsIpam) HandleIpam(cniConf *cniconfig.IpamConfig, d *render.RenderData) error {
+func (ipam *WhereAboutsIpam) HandleIpam(ipamConf *cniconfig.IpamConfig, d *render.RenderData) error {
 
-	ipStr := cniConf.Subnets[0].Spec.Address
-	ipPool := cniConf.Subnets[0].Spec.AllocationPool
+	ipStr := ipamConf.Subnets[0].Spec.Address
+	ipPool := ipamConf.Subnets[0].Spec.AllocationPool
 	ipAddr := net.ParseIP(ipStr)
-	mask := cniConf.Subnets[0].Spec.Mask
-	dns := cniConf.Subnets[0].Spec.DNS
+	mask := ipamConf.Subnets[0].Spec.Mask
+	dns := ipamConf.Subnets[0].Spec.DNS
 	if len(ipPool) > 1 {
 		err := errors.New("more than one ip range not supported by WhereAbouts cni")
-		cniConf.Log.Error(err, "")
+		ipamConf.Log.Error(err, "")
 		return err
 	}
 
@@ -61,8 +61,8 @@ func (ipam *WhereAboutsIpam) HandleIpam(cniConf *cniconfig.IpamConfig, d *render
 	}
 
 	//Populate Routes
-	if len(cniConf.Routes[cniConf.Subnets[0].GetName()]) > 0 {
-		for _, cfgRoute := range cniConf.Routes[cniConf.Subnets[0].GetName()] {
+	if len(ipamConf.Routes[ipamConf.Subnets[0].GetName()]) > 0 {
+		for _, cfgRoute := range ipamConf.Routes[ipamConf.Subnets[0].GetName()] {
 			routePrefix := cfgRoute.Spec.Prefix + "/" + fmt.Sprint(cfgRoute.Spec.Mask)
 			route := Route{Destination: routePrefix, Gateway: cfgRoute.Spec.NextHop}
 			ipamObj.Routes = append(ipamObj.Routes, route)
@@ -74,11 +74,11 @@ func (ipam *WhereAboutsIpam) HandleIpam(cniConf *cniconfig.IpamConfig, d *render
 	ipamObj.Dns = dns
 	marshalledConfig, err := json.Marshal(ipamObj)
 	if err != nil {
-		cniConf.Log.Error(err, "Error marshalling ipam config")
+		ipamConf.Log.Error(err, "Error marshalling ipam config")
 		return err
 	}
 	d.Data["Ipam"] = string(marshalledConfig)
-	cniConf.Log.Info("Ipam config populated:", "config", d.Data["Ipam"])
+	ipamConf.Log.Info("Ipam config populated:", "config", d.Data["Ipam"])
 	return nil
 }
 
