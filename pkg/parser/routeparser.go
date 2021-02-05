@@ -40,14 +40,14 @@ func (sp *RouteParser) ValidateRoute() error {
 			sp.log.Error(err, "")
 			return err
 		}
-		subnetCidr := route.Spec.Prefix + "/" + fmt.Sprint(route.Spec.Mask)
-		_, ipnet, err := net.ParseCIDR(subnetCidr)
+		routeCidr := route.Spec.Prefix + "/" + fmt.Sprint(route.Spec.Mask)
+		_, routeIpnet, err := net.ParseCIDR(routeCidr)
 		if err != nil {
-			err := fmt.Errorf("invalid CIDR: %s", subnetCidr)
+			err := fmt.Errorf("invalid CIDR: %s", routeCidr)
 			sp.log.Error(err, "")
 			return err
 		}
-		if route.Spec.Prefix != ipnet.IP.String() {
+		if route.Spec.Prefix != routeIpnet.IP.String() {
 			err := fmt.Errorf("invalid Prefix %s,Route Prefix field should be a valid subnet", route.Spec.Prefix)
 			sp.log.Error(err, "")
 			return err
