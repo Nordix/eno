@@ -56,7 +56,7 @@ func (sp *SubnetParser) ValidateSubnet() error {
 	}
 	err = sp.validateAllocationPool(ipnet, sp.subnetResource.Spec.AllocationPool)
 	if err != nil {
-		return fmt.Errorf("failed populating whereabouts ipam config: %s", err)
+		return fmt.Errorf("Allocation pool validation failed: %s", err)
 	}
 	return nil
 }
