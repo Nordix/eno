@@ -32,10 +32,23 @@ func (sp *RouteParser) ValidateRoute() error {
 		sp.log.Error(err, "")
 		return err
 	}
+
 	var route *enov1alpha1.Route
 	for _, route = range sp.RouteResource {
 		if !ipnet.Contains(net.ParseIP(route.Spec.NextHop)) {
 			err := fmt.Errorf("nextHop %s of route %s doesnot belong to CIDR %s", route.Spec.NextHop, route.Spec.Prefix, cidr)
+			sp.log.Error(err, "")
+			return err
+		}
+		subnetCidr := route.Spec.Prefix + "/" + fmt.Sprint(route.Spec.Mask)
+		_, ipnet, err := net.ParseCIDR(subnetCidr)
+		if err != nil {
+			err := fmt.Errorf("invalid CIDR: %s", subnetCidr)
+			sp.log.Error(err, "")
+			return err
+		}
+		if route.Spec.Prefix != ipnet.IP.String() {
+			err := fmt.Errorf("invalid Prefix %s,Route Prefix field should be a valid subnet", route.Spec.Prefix)
 			sp.log.Error(err, "")
 			return err
 		}

@@ -43,14 +43,25 @@ func (sp *SubnetParser) ValidateSubnet() error {
 		return err
 	}
 	cidr := ipStr + "/" + fmt.Sprint(mask)
-	err := sp.validateAllocationPool(cidr, sp.subnetResource.Spec.AllocationPool)
+	_, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		err := fmt.Errorf("invalid CIDR: %s", cidr)
+		sp.log.Error(err, "")
+		return err
+	}
+	if ipnet.IP.String() != ipStr {
+		err := fmt.Errorf("invalid Address %s,Subnet Address field should be a valid subnet", ipStr)
+		sp.log.Error(err, "")
+		return err
+	}
+	err = sp.validateAllocationPool(ipnet, sp.subnetResource.Spec.AllocationPool)
 	if err != nil {
 		return fmt.Errorf("failed populating whereabouts ipam config: %s", err)
 	}
 	return nil
 }
 
-func (sp *SubnetParser) validateAllocationPool(cidr string, ipPools []enov1alpha1.IPPool) error {
+func (sp *SubnetParser) validateAllocationPool(ipnet *net.IPNet, ipPools []enov1alpha1.IPPool) error {
 	for _, ipPool := range ipPools {
 		startIP := net.ParseIP(ipPool.Start)
 		if startIP == nil {
@@ -70,14 +81,8 @@ func (sp *SubnetParser) validateAllocationPool(cidr string, ipPools []enov1alpha
 			sp.log.Error(err, "")
 			return err
 		}
-		_, ipnet, err := net.ParseCIDR(cidr)
-		if err != nil {
-			err := fmt.Errorf("invalid CIDR: %s", cidr)
-			sp.log.Error(err, "")
-			return err
-		}
 		if !ipnet.Contains(startIP) && !ipnet.Contains(endIP) {
-			err := fmt.Errorf("startIP %s and/or EndIP %s not in cidr: %s", startIP, endIP, cidr)
+			err := fmt.Errorf("startIP %s and/or EndIP %s not in cidr: %s", startIP, endIP, ipnet.String())
 			sp.log.Error(err, "")
 			return err
 		}

@@ -3,7 +3,7 @@ kind: Subnet
 metadata:
   name: ipv6-subnet
 spec:
-  Address: "2001::0"
+  Address: "2001::"
   Mask: 64
   AllocationPool: [{"Start":"2001::1","End":"2001::100"}]
   Ipam: "whereabouts"

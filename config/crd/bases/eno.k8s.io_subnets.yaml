@@ -70,7 +70,6 @@ spec:
               type: string
           required:
           - Address
-          - AllocationPool
           - Ipam
           - Mask
           - Type

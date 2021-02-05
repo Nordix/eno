@@ -32,7 +32,7 @@ type SubnetSpec struct {
 	Ipam           string   `json:"Ipam"`
 	Address        string   `json:"Address"`
 	Mask           int16    `json:"Mask"`
-	AllocationPool []IPPool `json:"AllocationPool"`
+	AllocationPool []IPPool `json:"AllocationPool,omitempty"`
 	Routes         []string `json:"Routes,omitempty"`
 	DNS            string   `json:"DNS,omitempty"`
 	// +kubebuilder:validation:Enum=v4;v6

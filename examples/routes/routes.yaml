@@ -3,6 +3,6 @@ kind: Route
 metadata:
   name: ipv4-subnet1-route
 spec:
-  Prefix: "192.168.0.2"
+  Prefix: "192.168.0.0"
   Mask: 24
   NextHop: "10.10.1.1"
