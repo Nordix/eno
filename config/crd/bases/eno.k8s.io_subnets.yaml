@@ -51,8 +51,20 @@ spec:
                 - Start
                 type: object
               type: array
-            DNS:
-              type: string
+            Dns:
+              description: SubnetDNS contains DNS configurations
+              properties:
+                Domain:
+                  type: string
+                Nameservers:
+                  items:
+                    type: string
+                  type: array
+                Search:
+                  items:
+                    type: string
+                  type: array
+              type: object
             Ipam:
               enum:
               - whereabouts
