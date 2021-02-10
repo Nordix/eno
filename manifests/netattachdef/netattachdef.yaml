@@ -1,0 +1,18 @@
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: {{.NetAttachDefName}}
+  {{if .NetAttachDefNamespace}}
+  namespace: {{.NetAttachDefNamespace}}
+  {{- else}}
+  namespace: "default"
+  {{- end}}
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: {{.NetResourceName}}
+spec:
+  config: '{
+   {{.CNI}}
+   {{if .IPAM}}
+   ,{{.IPAM}}
+   {{- end}}
+  }'

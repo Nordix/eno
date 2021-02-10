@@ -1,7 +1,6 @@
 package cni
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -11,34 +10,25 @@ import (
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 
 	"github.com/Nordix/eno/pkg/cni/cniconfig"
-
-	"github.com/Nordix/eno/pkg/render"
 )
 
 // Ipam is an interface for IPAM Cnis
 type Ipam interface {
-	HandleIpam(ipamConf *cniconfig.IpamConfig, d *render.RenderData) error
+	HandleIpam(ipamConf *cniconfig.IpamConfig, data map[string]interface{}) (string, error)
 }
 
 // WhereAboutsIpam instance
 type WhereAboutsIpam struct{}
 
-type whereAboutsIpamJSON struct {
-	Range  string  `json:"range,omitempty"`
-	Type   string  `json:"type,omitempty"`
-	Routes []route `json:"routes,omitempty"`
-	Dns    *DNS    `json:"dns,omitempty"`
-}
-
 type route struct {
-	Destination string `json:"dst,omitempty"`
-	Gateway     string `json:"gw,omitempty"`
+	Destination string
+	Gateway     string
 }
 
 type DNS struct {
-	Nameservers []string `json:"nameservers,omitempty"`
-	Domain      string   `json:"domain,omitempty"`
-	Search      []string `json:"search,omitempty"`
+	Nameservers []string
+	Domain      string
+	Search      []string
 }
 
 //NewWhereAboutsIpam creates instance of WhereAbouts cni
@@ -47,26 +37,19 @@ func NewWhereAboutsIpam() *WhereAboutsIpam {
 }
 
 // HandleIpam - Handles the whereabouts ipam cni case
-func (ipam *WhereAboutsIpam) HandleIpam(ipamConf *cniconfig.IpamConfig, d *render.RenderData) error {
-	var ipamObj whereAboutsIpamJSON
-	ipamObj.Type = "whereabouts"
-	err := ipam.populateRange(ipamConf, &ipamObj)
+func (ipam *WhereAboutsIpam) HandleIpam(ipamConf *cniconfig.IpamConfig, data map[string]interface{}) (string, error) {
+	//TODO: the implementation for different cni and ipam types can be tried to be made generic
+	// and only if required interface implementation could be created.
+	err := ipam.populateRange(ipamConf, data)
 	if err != nil {
-		return err
+		return "", err
 	}
-	ipam.populateRoutes(ipamConf, &ipamObj)
-	ipam.populateDNS(ipamConf, &ipamObj)
-	marshalledConfig, err := json.Marshal(ipamObj)
-	if err != nil {
-		ipamConf.Log.Error(err, "Error marshalling ipam config")
-		return err
-	}
-	d.Data["Ipam"] = string(marshalledConfig)
-	ipamConf.Log.Info("Ipam config populated:", "config", d.Data["Ipam"])
-	return nil
+	ipam.populateRoutes(ipamConf, data)
+	ipam.populateDNS(ipamConf, data)
+	return "whereabouts.txt", nil
 }
 
-func (ipam *WhereAboutsIpam) populateRange(ipamConf *cniconfig.IpamConfig, ipamObj *whereAboutsIpamJSON) error {
+func (ipam *WhereAboutsIpam) populateRange(ipamConf *cniconfig.IpamConfig, data map[string]interface{}) error {
 	ipPool := ipamConf.Subnets[0].Spec.AllocationPool
 	ipAddr := net.ParseIP(ipamConf.Subnets[0].Spec.Address)
 	mask := ipamConf.Subnets[0].Spec.Mask
@@ -75,36 +58,41 @@ func (ipam *WhereAboutsIpam) populateRange(ipamConf *cniconfig.IpamConfig, ipamO
 		ipamConf.Log.Error(err, "")
 		return err
 	}
+	//TODO: this if else also could be handled in template
 	if len(ipPool) != 0 {
-		ipamObj.Range = formatAllocationPool(ipPool[0]) + "/" + fmt.Sprint(mask)
+		data["Range"] = formatAllocationPool(ipPool[0]) + "/" + fmt.Sprint(mask)
 	} else {
-		ipamObj.Range = ipAddr.String() + "/" + fmt.Sprint(mask)
+		data["Range"] = ipAddr.String() + "/" + fmt.Sprint(mask)
 	}
 	return nil
 }
 
-func (ipam *WhereAboutsIpam) populateRoutes(ipamConf *cniconfig.IpamConfig, ipamObj *whereAboutsIpamJSON) {
+func (ipam *WhereAboutsIpam) populateRoutes(ipamConf *cniconfig.IpamConfig, data map[string]interface{}) {
+	var routes []route
 	if len(ipamConf.Routes[ipamConf.Subnets[0].GetName()]) > 0 {
 		for _, cfgRoute := range ipamConf.Routes[ipamConf.Subnets[0].GetName()] {
 			routePrefix := cfgRoute.Spec.Prefix + "/" + fmt.Sprint(cfgRoute.Spec.Mask)
 			route := route{Destination: routePrefix, Gateway: cfgRoute.Spec.NextHop}
-			ipamObj.Routes = append(ipamObj.Routes, route)
+			routes = append(routes, route)
 		}
+	}
+	if len(routes) > 0 {
+		data["Routes"] = routes
 	}
 }
 
-func (ipam *WhereAboutsIpam) populateDNS(ipamConf *cniconfig.IpamConfig, ipamObj *whereAboutsIpamJSON) {
+func (ipam *WhereAboutsIpam) populateDNS(ipamConf *cniconfig.IpamConfig, data map[string]interface{}) {
 	dns := ipamConf.Subnets[0].Spec.DNS
 	if len(dns.Nameservers) == 0 && dns.Domain == "" && len(dns.Search) == 0 {
 		return
 	}
-	dnsJSON := DNS{dns.Nameservers, dns.Domain, dns.Search}
-	ipamObj.Dns = &dnsJSON
+	dnsIpam := DNS{dns.Nameservers, dns.Domain, dns.Search}
+	data["Dns"] = dnsIpam
 }
 
 // Cnier is an interface for Cnis (e.g. ovs-cni, host-device-cni)
 type Cnier interface {
-	HandleCni(cniConf *cniconfig.CniConfig, d *render.RenderData) (string, error)
+	HandleCni(cniConf *cniconfig.CniConfig, data map[string]interface{}) (string, error)
 }
 
 // OvsCni instance
@@ -116,8 +104,8 @@ func NewOvsCni() *OvsCni {
 }
 
 // HandleCni - Handles the ovs-cni case
-func (ovscni *OvsCni) HandleCni(cniConf *cniconfig.CniConfig, d *render.RenderData) (string, error) {
-	manifestFolder := "ovs_netattachdef"
+func (ovscni *OvsCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string]interface{}) (string, error) {
+	manifestFolder := "ovs.txt"
 	//For VlanType=trunk we do not need to do anything
 	switch cniConf.VlanType {
 	case "access":
@@ -126,14 +114,14 @@ func (ovscni *OvsCni) HandleCni(cniConf *cniconfig.CniConfig, d *render.RenderDa
 			cniConf.Log.Error(err, "L2Services cannot contain more than one Vlan in VlanType=access case")
 			return "", err
 		}
-		d.Data["AccessVlan"] = cniConf.VlanIds[0]
+		data["AccessVlan"] = cniConf.VlanIds[0]
 	case "selectivetrunk":
 		tmpList := []string{}
 		for _, vlanID := range cniConf.VlanIds {
 			tmpStr := "{\"id\": " + strconv.Itoa(int(vlanID)) + "}"
 			tmpList = append(tmpList, tmpStr)
 		}
-		d.Data["SelectiveVlan"] = "[" + strings.Join(tmpList, ",") + "]"
+		data["SelectiveVlan"] = "[" + strings.Join(tmpList, ",") + "]"
 	case "trunk":
 		cniConf.Log.Info("Transparent Trunk case in cluster level")
 	}
@@ -149,8 +137,8 @@ func NewHostDevCni() *HostDevCni {
 }
 
 // HandleCni - Handles the host-device-cni case
-func (hdcni *HostDevCni) HandleCni(cniConf *cniconfig.CniConfig, d *render.RenderData) (string, error) {
-	manifestFolder := "host-device_netattachdef"
+func (hdcni *HostDevCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string]interface{}) (string, error) {
+	manifestFolder := "host-device.txt"
 	switch cniConf.VlanType {
 	case "access":
 		err := errors.New("Host-device cni does not support VlanType=access")

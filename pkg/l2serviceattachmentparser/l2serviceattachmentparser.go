@@ -12,7 +12,6 @@ import (
 	"github.com/Nordix/eno/pkg/common"
 	"github.com/Nordix/eno/pkg/config"
 	"github.com/Nordix/eno/pkg/connectionpointparser"
-	"github.com/Nordix/eno/pkg/render"
 	"github.com/go-logr/logr"
 )
 
@@ -45,27 +44,28 @@ func NewL2SrvAttParser(srvAttObj *enov1alpha1.L2ServiceAttachment, l2srvObjs []*
 }
 
 // ParseL2ServiceAttachment - parses a L2ServiceAttachment Resource
-func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (string, error) {
+func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(data map[string]interface{}) (string, string, error) {
 	// Initiate Parsers
 	cpParser := connectionpointparser.NewCpParser(sattp.cpResource, sattp.log)
 
 	// Parse ConnectionPoint object
-	cpParser.ParseConnectionPoint(d)
+	cpParser.ParseConnectionPoint(data)
 
 	cniToUse, err := sattp.pickCni()
 	if err != nil {
 		sattp.log.Error(err, "Error occurred while picking cni")
-		return "", err
+		return "", "", err
 	}
 
 	cniObj := sattp.cniMapping[cniToUse]
 	cniConfigObj := sattp.instantiateCniConfig()
-	manifestFolder, err := cniObj.HandleCni(cniConfigObj, d)
+	manifestFile, err := cniObj.HandleCni(cniConfigObj, data)
 	if err != nil {
 		sattp.log.Error(err, "Error occured while handling cni")
-		return "", err
+		return "", "", err
 	}
 
+	var ipamManifestFile string
 	if len(sattp.subnetResources) > 0 {
 		var ipType, ipamType string
 		for i, subnet := range sattp.subnetResources {
@@ -73,31 +73,32 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(d *render.RenderData) (str
 				if ipType == subnet.Spec.Type {
 					err := errors.New("subnets in one L2Service should not be of same ip type")
 					sattp.log.Error(err, "")
-					return "", err
+					return "", "", err
 				}
 				if ipamType != subnet.Spec.Ipam {
 					err := errors.New("subnets in one L2Service should have same ipam type")
 					sattp.log.Error(err, "")
-					return "", err
+					return "", "", err
 				}
 			}
 			ipType = subnet.Spec.Type
 			ipamType = subnet.Spec.Ipam
 			sp := parser.NewSubnetParser(subnet, sattp.log)
 			if err := sp.ValidateSubnet(); err != nil {
-				return "", err
+				return "", "", err
 			}
 			if err := sp.ValidateRoute(sattp.routeResources[subnet.GetName()]); err != nil {
-				return "", err
+				return "", "", err
 			}
 		}
 		ipam := sattp.ipamMapping[ipamType]
 		ipamConfigObj := sattp.instantiateIpamConfig()
-		if err := ipam.HandleIpam(ipamConfigObj, d); err != nil {
-			return "", err
+		ipamManifestFile, err = ipam.HandleIpam(ipamConfigObj, data)
+		if err != nil {
+			return "", "", err
 		}
 	}
-	return manifestFolder, nil
+	return manifestFile, ipamManifestFile, nil
 }
 
 // pickCni - pick the CNI to be used for net-attach-def

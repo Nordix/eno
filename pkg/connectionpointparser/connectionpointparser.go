@@ -2,7 +2,6 @@ package connectionpointparser
 
 import (
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
-	"github.com/Nordix/eno/pkg/render"
 	"github.com/go-logr/logr"
 )
 
@@ -19,10 +18,10 @@ func NewCpParser(cpObj *enov1alpha1.ConnectionPoint, logger logr.Logger) *CpPars
 }
 
 // ParseConnectionPoint - parses a ConnectionPoint Resource
-func (cpp *CpParser) ParseConnectionPoint(d *render.RenderData) {
+func (cpp *CpParser) ParseConnectionPoint(data map[string]interface{}) {
 	if cpp.cpResource.Spec.Type == "kernel" {
-		d.Data["NetObjName"] = cpp.cpResource.Spec.InterfaceName
+		data["NetObjName"] = cpp.cpResource.Spec.InterfaceName
 	} else {
-		d.Data["NetObjName"] = cpp.cpResource.Spec.ResourceName
+		data["NetObjName"] = cpp.cpResource.Spec.ResourceName
 	}
 }
