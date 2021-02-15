@@ -36,7 +36,7 @@ func (sp *RouteParser) ValidateRoute() error {
 	var route *enov1alpha1.Route
 	for _, route = range sp.RouteResource {
 		if !ipnet.Contains(net.ParseIP(route.Spec.NextHop)) {
-			err := fmt.Errorf("nextHop %s of route %s doesnot belong to CIDR %s", route.Spec.NextHop, route.Spec.Prefix, cidr)
+			err := fmt.Errorf("nextHop %s of route %s does not belong to CIDR %s", route.Spec.NextHop, route.Spec.Prefix, cidr)
 			sp.log.Error(err, "")
 			return err
 		}

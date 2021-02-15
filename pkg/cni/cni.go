@@ -38,15 +38,14 @@ func NewWhereAboutsIpam() *WhereAboutsIpam {
 
 // HandleIpam - Handles the whereabouts ipam cni case
 func (ipam *WhereAboutsIpam) HandleIpam(ipamConf *cniconfig.IpamConfig, data map[string]interface{}) (string, error) {
-	//TODO: the implementation for different cni and ipam types can be tried to be made generic
-	// and only if required interface implementation could be created.
+	manifestFile := "whereabouts.txt"
 	err := ipam.populateRange(ipamConf, data)
 	if err != nil {
 		return "", err
 	}
 	ipam.populateRoutes(ipamConf, data)
 	ipam.populateDNS(ipamConf, data)
-	return "whereabouts.txt", nil
+	return manifestFile, nil
 }
 
 func (ipam *WhereAboutsIpam) populateRange(ipamConf *cniconfig.IpamConfig, data map[string]interface{}) error {
@@ -105,7 +104,7 @@ func NewOvsCni() *OvsCni {
 
 // HandleCni - Handles the ovs-cni case
 func (ovscni *OvsCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string]interface{}) (string, error) {
-	manifestFolder := "ovs.txt"
+	manifestFile := "ovs.txt"
 	//For VlanType=trunk we do not need to do anything
 	switch cniConf.VlanType {
 	case "access":
@@ -125,7 +124,8 @@ func (ovscni *OvsCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string]in
 	case "trunk":
 		cniConf.Log.Info("Transparent Trunk case in cluster level")
 	}
-	return manifestFolder, nil
+	data["ResourcePrefix"] = "ovs-cni.network.kubevirt.io/"
+	return manifestFile, nil
 }
 
 // HostDevCni instance
@@ -138,7 +138,7 @@ func NewHostDevCni() *HostDevCni {
 
 // HandleCni - Handles the host-device-cni case
 func (hdcni *HostDevCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string]interface{}) (string, error) {
-	manifestFolder := "host-device.txt"
+	manifestFile := "host-device.txt"
 	switch cniConf.VlanType {
 	case "access":
 		err := errors.New("Host-device cni does not support VlanType=access")
@@ -151,7 +151,7 @@ func (hdcni *HostDevCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string
 	case "trunk":
 		cniConf.Log.Info("Transparent Trunk case in Host-device cni")
 	}
-	return manifestFolder, nil
+	return manifestFile, nil
 }
 
 func formatAllocationPool(ipRange enov1alpha1.IPPool) string {

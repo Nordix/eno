@@ -123,7 +123,7 @@ func (r *L2ServiceAttachmentReconciler) DefineNetAttachDef(ctx context.Context, 
 		if err != nil {
 			return nil, err
 		}
-		log.Info("ipam template resolved:" + cniConfig)
+		log.Info("ipam template resolved:" + ipamConfig)
 		data["IPAM"] = ipamConfig
 	}
 

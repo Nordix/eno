@@ -47,58 +47,72 @@ func NewL2SrvAttParser(srvAttObj *enov1alpha1.L2ServiceAttachment, l2srvObjs []*
 func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(data map[string]interface{}) (string, string, error) {
 	// Initiate Parsers
 	cpParser := connectionpointparser.NewCpParser(sattp.cpResource, sattp.log)
-
 	// Parse ConnectionPoint object
 	cpParser.ParseConnectionPoint(data)
-
-	cniToUse, err := sattp.pickCni()
+	cniManifestFile, err := sattp.populateCni(data)
 	if err != nil {
-		sattp.log.Error(err, "Error occurred while picking cni")
+		sattp.log.Error(err, "Error occurred while populating cni")
 		return "", "", err
 	}
-
-	cniObj := sattp.cniMapping[cniToUse]
-	cniConfigObj := sattp.instantiateCniConfig()
-	manifestFile, err := cniObj.HandleCni(cniConfigObj, data)
-	if err != nil {
-		sattp.log.Error(err, "Error occured while handling cni")
-		return "", "", err
-	}
-
 	var ipamManifestFile string
 	if len(sattp.subnetResources) > 0 {
-		var ipType, ipamType string
-		for i, subnet := range sattp.subnetResources {
-			if i > 0 {
-				if ipType == subnet.Spec.Type {
-					err := errors.New("subnets in one L2Service should not be of same ip type")
-					sattp.log.Error(err, "")
-					return "", "", err
-				}
-				if ipamType != subnet.Spec.Ipam {
-					err := errors.New("subnets in one L2Service should have same ipam type")
-					sattp.log.Error(err, "")
-					return "", "", err
-				}
-			}
-			ipType = subnet.Spec.Type
-			ipamType = subnet.Spec.Ipam
-			sp := parser.NewSubnetParser(subnet, sattp.log)
-			if err := sp.ValidateSubnet(); err != nil {
-				return "", "", err
-			}
-			if err := sp.ValidateRoute(sattp.routeResources[subnet.GetName()]); err != nil {
-				return "", "", err
-			}
-		}
-		ipam := sattp.ipamMapping[ipamType]
-		ipamConfigObj := sattp.instantiateIpamConfig()
-		ipamManifestFile, err = ipam.HandleIpam(ipamConfigObj, data)
+		ipamManifestFile, err = sattp.populateIpam(data)
 		if err != nil {
+			sattp.log.Error(err, "Error occurred while populating ipam")
 			return "", "", err
 		}
 	}
-	return manifestFile, ipamManifestFile, nil
+	return cniManifestFile, ipamManifestFile, nil
+}
+
+func (sattp *L2SrvAttParser) populateCni(data map[string]interface{}) (string, error) {
+	cniToUse, err := sattp.pickCni()
+	if err != nil {
+		sattp.log.Error(err, "Error occurred while picking cni")
+		return "", err
+	}
+	cniObj := sattp.cniMapping[cniToUse]
+	cniConfigObj := sattp.instantiateCniConfig()
+	cniManifestFile, err := cniObj.HandleCni(cniConfigObj, data)
+	if err != nil {
+		sattp.log.Error(err, "Error occured while handling cni")
+		return "", err
+	}
+	return cniManifestFile, nil
+}
+
+func (sattp *L2SrvAttParser) populateIpam(data map[string]interface{}) (string, error) {
+	var ipType, ipamType string
+	for i, subnet := range sattp.subnetResources {
+		if i > 0 {
+			if ipType == subnet.Spec.Type {
+				err := errors.New("subnets in one L2Service should not be of same ip type")
+				sattp.log.Error(err, "")
+				return "", err
+			}
+			if ipamType != subnet.Spec.Ipam {
+				err := errors.New("subnets in one L2Service should have same ipam type")
+				sattp.log.Error(err, "")
+				return "", err
+			}
+		}
+		ipType = subnet.Spec.Type
+		ipamType = subnet.Spec.Ipam
+		sp := parser.NewSubnetParser(subnet, sattp.log)
+		if err := sp.ValidateSubnet(); err != nil {
+			return "", err
+		}
+		if err := sp.ValidateRoute(sattp.routeResources[subnet.GetName()]); err != nil {
+			return "", err
+		}
+	}
+	ipam := sattp.ipamMapping[ipamType]
+	ipamConfigObj := sattp.instantiateIpamConfig()
+	ipamManifestFile, err := ipam.HandleIpam(ipamConfigObj, data)
+	if err != nil {
+		return "", err
+	}
+	return ipamManifestFile, nil
 }
 
 // pickCni - pick the CNI to be used for net-attach-def
