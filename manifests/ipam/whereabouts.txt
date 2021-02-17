@@ -1,4 +1,4 @@
-"ipam" :{
+"ipam": {
     "range":"{{.Range}}",
     "type":"whereabouts"
     {{if .Routes}},"routes":[{{$first := true}}{{range $r := .Routes}}{{if $first}}{{$first = false}}{{else}},{{end}}
