@@ -1,0 +1,10 @@
+apiVersion: eno.k8s.io/v1alpha1
+kind: L2BridgeDomain
+metadata:
+  name: l2bridgedomain-seven
+spec:
+  Vlan: 7
+  #ConnectionPoints: ["cp-br-data", "cp-br-trunk", "cp-virtio"]
+  #ConnectionPoints: ["cp-br-trunk", "cp-br-data"]
+  #ConnectionPoints: ["cp-virtio"]
+  ConnectionPoints: []
