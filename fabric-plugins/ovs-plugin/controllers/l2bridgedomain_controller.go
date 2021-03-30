@@ -18,7 +18,9 @@ package controllers
 
 import (
 	"context"
-	//"fmt"
+
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -64,17 +66,54 @@ func (r *L2BridgeDomainReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		return ctrl.Result{}, err
 	}
 
-	//desiredPorts, err := r.CreateDesiredState(ctx, log, brDom)
-	//actualPorts, err := r.GetActualState(brDom)
-	//fmt.Printf("%+v\n", desiredPorts)
-	//fmt.Printf("%+v\n", actualPorts)
-	_ = r.Apply(ctx, log, brDom)
+	// Check for diff between Desired and Actual state of the fabric
+	diffExists, err := r.CheckDesiredActualDiff(ctx, log, brDom)
+	if err != nil {
+		if err := r.UpdateStatus(ctx, log, "error", err.Error(), brDom); err != nil {
+			return ctrl.Result{}, err
+		}
+		log.Error(err, "Failed to check for diffs in Desired and Actual state of the Fabric", "L2BridgeDomain.Name", brDom.Name)
+		return ctrl.Result{}, err
+	}
+
+	// Update state of the fabric if diff found between Desired and Actual state
+	if diffExists {
+		err := r.Apply(ctx, log, brDom)
+		if err != nil {
+			if err := r.UpdateStatus(ctx, log, "error", err.Error(), brDom); err != nil {
+				return ctrl.Result{}, err
+			}
+			log.Error(err, "Failed to match Desired and Actual state on the Fabric", "L2BridgeDomain.Name", brDom.Name)
+			return ctrl.Result{}, err
+		}
+		if err := r.UpdateStatus(ctx, log, "pending", "Update pending", brDom); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	// Update status of L2BridgeDomain resource with ready phase
+	if brDom.Status.Phase != "ready" {
+		if err := r.UpdateStatus(ctx, log, "ready", "Resources has been created", brDom); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
+}
+
+func ignoreStatusChangePredicate() predicate.Predicate {
+	return predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			// Ignore updates to CR status in which case metadata.Generation does not change
+			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
+		},
+	}
 }
 
 func (r *L2BridgeDomainReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&enofabricv1alpha1.L2BridgeDomain{}).
+		WithEventFilter(ignoreStatusChangePredicate()).
 		Complete(r)
 }
