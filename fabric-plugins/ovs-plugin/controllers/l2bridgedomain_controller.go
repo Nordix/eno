@@ -44,6 +44,8 @@ type L2BridgeDomainReconciler struct {
 
 // +kubebuilder:rbac:groups=eno.k8s.io,resources=l2bridgedomains,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eno.k8s.io,resources=l2bridgedomains/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=eno.k8s.io,resources=connectionpoints,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=*,verbs=*
 
 func (r *L2BridgeDomainReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()

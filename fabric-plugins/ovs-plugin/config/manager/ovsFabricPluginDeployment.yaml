@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ovs-fabric-plugin
+  namespace: system
+  labels:
+    plugin-plane: fabric-plugin
+spec:
+  selector:
+    matchLabels:
+      plugin-plane: fabric-plugin
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        plugin-plane: fabric-plugin
+    spec:
+      containers:
+      - command:
+        - /manager
+        args:
+        - --enable-leader-election
+        image: ovs-fabric-plugin:latest
+        imagePullPolicy: Never
+        env:
+        - name: FABRIC_PLUGIN_NAMESPACE
+          value: "eno-system"
+        - name: POOL_CONFIGMAP_NAME
+          value: "eno-ovs-fabric-plugin-pool-conf"
+        - name: FABRIC_CONFIGMAP_NAME
+          value: "eno-ovs-fabric-plugin-fabric-conf"
+        - name: FABRIC_OVS_IP
+          value: "10.2.0.1"
+        - name: FABRIC_OVS_PORT
+          value: "6640"
+        name: manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      terminationGracePeriodSeconds: 10

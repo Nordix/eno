@@ -12,7 +12,7 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= ovs-fabric-plugin:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -27,7 +27,7 @@ all: manager
 
 # Run tests
 test: generate fmt vet manifests
-	go test ./... -coverprofile cover.out
+	#go test ./... -coverprofile cover.out
 
 # Build manager binary
 manager: generate fmt vet
@@ -50,9 +50,12 @@ deploy: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
+undeploy: manifests kustomize
+	$(KUSTOMIZE) build config/default | kubectl delete -f -
+
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=ovs-fabric-plugin-manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Run go fmt against code
 fmt:
@@ -67,7 +70,10 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: test
+#docker-build: test
+#	docker build . -t ${IMG}
+
+docker-build:
 	docker build . -t ${IMG}
 
 # Push the docker image

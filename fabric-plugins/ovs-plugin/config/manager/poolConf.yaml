@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pool-conf
-  #namespace: system
-  namespace: test
+  name: ovs-fabric-plugin-pool-conf
+  namespace: system
+  #namespace: test
 data:
   nodePools: |
     - poolConf:

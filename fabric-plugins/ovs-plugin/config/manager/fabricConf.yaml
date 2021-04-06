@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: fabric-conf
-  #namespace: system
-  namespace: test
+  name: ovs-fabric-plugin-fabric-conf
+  namespace: system
+  #namespace: test
 data:
   links: |
     - hostname: master0
