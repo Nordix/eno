@@ -133,7 +133,7 @@
 <figcaption>Figure 4: L2BridgeDomain CRD</figcaption>
 </figure>
 
-#### ENO components overview
+#### ENO Components Overview
 
 > Figure 5 depicts all the different components of ENO framework and how those components interact during the creation of a single L2ServiceAttachment CR.
 >
@@ -148,7 +148,7 @@
 <figcaption>Figure 5: ENO Components Overview</figcaption>
 </figure>
 
-#### ENO fabric plugin
+#### ENO Fabric Plugin
 
 > The below image shows a detailed overview of the fabric plugin component. Each fabric plugin in ENO needs one or more configuration files where the NodePool information (interface names, connection points, etc) and the Fabric information (Node names, interface names and switch port IDs) will be described. Those configuration files are important because through them ENO fabric plugin generates the desired state and use that to compare with actual state of the fabric.
 > In figure 6 we can see a basic operation of the fabric plugin.
