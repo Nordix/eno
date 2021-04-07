@@ -21,7 +21,7 @@
 > In fact, [ENO](https://github.com/Nordix/eno) is an attempt at providing a network orchestration API on the K8s cluster for use by the cloud admin to automate the necessary configuration inside the cluster and on the DC fabric. ENO generates the artefacts (e.g. network attachment definition CRDs) that application pods can refer to connect to networks. A CNI is responsible for the plumbing of a given pod interface to an existing network at pod creation time based on the NAD and infrastructure established by ENO at network creation time. The authorization of a pod for connecting to a network depends if it is allowed to use the NAD (e.g. using namespaces). Below is an example workflow showcasing E2E K8s secondary network orchestration using OvS in BareMetal based deployment.
 
 <figure class="image">
-<img alt="E2E K8s Secondary Network Orchestration" src="./E2E K8s Secondary Network Orchestration.png" />
+<img alt="E2E K8s Secondary Network Orchestration" src="./E2E_K8s_Secondary_Network_Orchestration.jpg" />
 <figcaption>Figure 1: E2E K8s Secondary Network Orchestration using OvS in BareMetal based deployment</figcaption>
 </figure>
 
@@ -61,7 +61,7 @@
 >
 
 <figure class="image">
-<img alt="Secondary External Network Data Model" src="./Secondary External Network DataModel.png" />
+<img alt="Secondary External Network Data Model" src="./Secondary_External_Network_DataModel.jpg" />
 <figcaption>Figure 2: Secondary External Network Data Model</figcaption>
 </figure>
 
@@ -99,7 +99,7 @@
 > - **Purpose:** Represents  one or several  network connection points on a set of compute hosts or worker VMs. One ConnectionPoint object can reference multiple real connection points by referring to a number of equally equipped nodes with its NodePool attribute. ConnectionPoint objects are created at cluster creation time and only referenced by clients in other API objects.
 
 <figure class="image">
-<img alt="ConnectionPoint Attributes" src="./ConnectionPoint Attributes.png" />
+<img alt="ConnectionPoint Attributes" src="./ConnectionPoint_Attributes.jpg" />
 <figcaption>Figure 3: ConnectionPoint Attributes (##TODO: Convert in markdown format)</figcaption>
 </figure>
 
