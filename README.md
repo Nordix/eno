@@ -98,7 +98,6 @@
 >
 > - **Purpose:** Represents  one or several  network connection points on a set of compute hosts or worker VMs. One ConnectionPoint object can reference multiple real connection points by referring to a number of equally equipped nodes with its NodePool attribute. ConnectionPoint objects are created at cluster creation time and only referenced by clients in other API objects.
 
-
 <figure class="image">
 <img alt="ConnectionPoint Attributes" src="./ConnectionPoint Attributes.png" />
 <figcaption>Figure 3: ConnectionPoint Attributes (##TODO: Convert in markdown format)</figcaption>
@@ -153,7 +152,8 @@
 
 > The below image shows a detailed overview of the fabric plugin component. Each fabric plugin in ENO needs one or more configuration files where the NodePool information (interface names, connection points, etc) and the Fabric information (Node names, interface names and switch port IDs) will be described. Those configuration files are important because through them ENO fabric plugin generates the desired state and use that to compare with actual state of the fabric.
 > In figure 6 we can see a basic operation of the fabric plugin.
-> 1. When a L2BridgeDomain event arrives the L2BridgeDomain controller kicks in and starts processing the event
+>
+> 1. When a L2BridgeDomain event arrives the L2BridgeDomain controller kicks in and starts processing the event.
 > 2. The controller will generate a desired state with the help of poolConf and fabricConf files. That desired state in this case is a group of ports that the corresponding Vlan should be opened by the end of controller operation.
 > 3. In continuation to that the L2BridgeDomain controller will also fetch the actual state from the fabric. That consists of a group of ports where the corresponding Vlan is already open on the fabric.
 > 4. The L2BridgeDomain controller then compares the desired state with the actual state for that specific vlan and if those states differ then configures the fabric ports accordingly.
@@ -166,6 +166,7 @@
 > The current ENO implementation focuses on the L2 ("VLAN provider network") use case for connecting secondary pod interfaces to a DCGW. To begin with, that's the most common scenario to automate for sure. It doesn't exclude other external network scenarios. The ENO APIs should be extendable to cover those. Calico as primary CNI with MetalLB as load balancer for incoming external traffic would, for example be an L3 use case that has already been considered and would be included in second phase. Similarly, we have plans to evaluate [NSM](https://github.com/networkservicemesh/networkservicemesh) in subsequent releases to extend ENO APIs to cover use-cases that are been addressed via NSM.
 >
 > ENO aims at providing automation APIs for networking solutions underneath the K8s cloud platform. An L2 service across a DC fabric to the GW being one that we have addresses so far. There may be others to be added with subsequent releases.
+
 ## How to get started
 
 ### Deploy ENO in k8s Cluster
