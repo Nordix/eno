@@ -28,7 +28,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	enofabricv1alpha1 "github.com/Nordix/eno/fabric-plugins/ovs-plugin/api/v1alpha1"
+	enocorev1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/Nordix/eno/fabric-plugins/ovs-plugin/pkg/config"
 	"github.com/Nordix/eno/fabric-plugins/ovs-plugin/pkg/ovs"
 )
@@ -52,7 +52,7 @@ func (r *L2BridgeDomainReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 	log := r.Log.WithValues("l2bridgedomain", req.NamespacedName)
 
 	// Fetch the L2BridgeDomain instance
-	brDom := &enofabricv1alpha1.L2BridgeDomain{}
+	brDom := &enocorev1alpha1.L2BridgeDomain{}
 	err := r.Get(ctx, req.NamespacedName, brDom)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -115,7 +115,7 @@ func ignoreStatusChangePredicate() predicate.Predicate {
 
 func (r *L2BridgeDomainReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&enofabricv1alpha1.L2BridgeDomain{}).
+		For(&enocorev1alpha1.L2BridgeDomain{}).
 		WithEventFilter(ignoreStatusChangePredicate()).
 		Complete(r)
 }

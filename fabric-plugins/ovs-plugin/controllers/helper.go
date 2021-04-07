@@ -3,7 +3,7 @@ package controllers
 import (
 	"context"
 
-	enofabricv1alpha1 "github.com/Nordix/eno/fabric-plugins/ovs-plugin/api/v1alpha1"
+	enocorev1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/go-logr/logr"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
@@ -71,7 +71,7 @@ func (r *L2BridgeDomainReconciler) GetPoolsAndLinks(ctx context.Context, log log
 }
 
 // UpdateStatus - Update the Status of L2BridgeDomain instance
-func (r *L2BridgeDomainReconciler) UpdateStatus(ctx context.Context, log logr.Logger, phase, message string, brDom *enofabricv1alpha1.L2BridgeDomain) error {
+func (r *L2BridgeDomainReconciler) UpdateStatus(ctx context.Context, log logr.Logger, phase, message string, brDom *enocorev1alpha1.L2BridgeDomain) error {
 	brDom.Status.Phase = phase
 	brDom.Status.Message = message
 	if err := r.Status().Update(ctx, brDom); err != nil {

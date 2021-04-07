@@ -10,11 +10,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	enofabricv1alpha1 "github.com/Nordix/eno/fabric-plugins/ovs-plugin/api/v1alpha1"
 	"github.com/go-logr/logr"
 )
 
-func (r *L2BridgeDomainReconciler) CreateDesiredState(ctx context.Context, log logr.Logger, nps []NodePool, links []Link, brDom *enofabricv1alpha1.L2BridgeDomain) ([]string, error) {
+func (r *L2BridgeDomainReconciler) CreateDesiredState(ctx context.Context, log logr.Logger, nps []NodePool, links []Link, brDom *enocorev1alpha1.L2BridgeDomain) ([]string, error) {
 	cpNames := brDom.Spec.ConnectionPoints
 	cpNodePools := []string{}
 	cpNodePoolHostnames := make(map[string][]string)
@@ -93,7 +92,7 @@ func (r *L2BridgeDomainReconciler) CreateDesiredState(ctx context.Context, log l
 	return desiredPorts, nil
 }
 
-func (r *L2BridgeDomainReconciler) GetActualState(ctx context.Context, log logr.Logger, nps []NodePool, links []Link, brDom *enofabricv1alpha1.L2BridgeDomain) ([]string, error) {
+func (r *L2BridgeDomainReconciler) GetActualState(ctx context.Context, log logr.Logger, nps []NodePool, links []Link, brDom *enocorev1alpha1.L2BridgeDomain) ([]string, error) {
 	brDomVlan := brDom.Spec.Vlan
 	nodePoolHostnames := make(map[string][]string)
 	nodePoolLinks := make(map[string][]Link)
@@ -183,7 +182,7 @@ func (r *L2BridgeDomainReconciler) GetActualState(ctx context.Context, log logr.
 	return actualPorts, nil
 }
 
-func (r *L2BridgeDomainReconciler) Apply(ctx context.Context, log logr.Logger, brDom *enofabricv1alpha1.L2BridgeDomain) error {
+func (r *L2BridgeDomainReconciler) Apply(ctx context.Context, log logr.Logger, brDom *enocorev1alpha1.L2BridgeDomain) error {
 	delPortsVlan := []string{}
 	addPortsVlan := []string{}
 
@@ -237,7 +236,7 @@ func (r *L2BridgeDomainReconciler) Apply(ctx context.Context, log logr.Logger, b
 	return nil
 }
 
-func (r *L2BridgeDomainReconciler) CheckDesiredActualDiff(ctx context.Context, log logr.Logger, brDom *enofabricv1alpha1.L2BridgeDomain) (bool, error) {
+func (r *L2BridgeDomainReconciler) CheckDesiredActualDiff(ctx context.Context, log logr.Logger, brDom *enocorev1alpha1.L2BridgeDomain) (bool, error) {
 	exists := make(map[string]bool)
 
 	nps, links, err := r.GetPoolsAndLinks(ctx, log)

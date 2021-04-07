@@ -20,6 +20,14 @@ rules:
 - apiGroups:
   - eno.k8s.io
   resources:
+  - l2bridgedomains
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eno.k8s.io
+  resources:
   - l2serviceattachments
   verbs:
   - create
@@ -33,6 +41,26 @@ rules:
   - eno.k8s.io
   resources:
   - l2serviceattachments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eno.k8s.io.k8s.io
+  resources:
+  - l2services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eno.k8s.io.k8s.io
+  resources:
+  - l2services/status
   verbs:
   - get
   - patch

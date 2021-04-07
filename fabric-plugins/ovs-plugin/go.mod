@@ -14,3 +14,8 @@ require (
 	k8s.io/client-go v0.18.3
 	sigs.k8s.io/controller-runtime v0.6.0
 )
+
+replace (
+
+	github.com/Nordix/eno => /root/go/src/github.com/Nordix/eno/eno
+)
