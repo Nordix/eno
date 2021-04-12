@@ -17,6 +17,8 @@ github.com/Masterminds/sprig v2.22.0+incompatible/go.mod h1:y6hNFY5UBTIWBxnzTeuN
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/Nordix/eno v0.0.0-20210218152959-7b550ea25fcb h1:FWj6vy9aDCRODhjuODFT8/wnsc9X9rWY3jP9LxR+lgU=
 github.com/Nordix/eno v0.0.0-20210218152959-7b550ea25fcb/go.mod h1:YbStdshKJfcaCEKfcVH1J9i1aUNgGf1Wx54eb4atK14=
+github.com/Nordix/eno v0.0.0-20210407164847-26f844680b25 h1:0r9Fhx7lz8bTmHHbJEJ8tizjha1zk+lnQwbTEjmKAsU=
+github.com/Nordix/eno v0.0.0-20210407164847-26f844680b25/go.mod h1:YbStdshKJfcaCEKfcVH1J9i1aUNgGf1Wx54eb4atK14=
 github.com/PuerkitoBio/purell v1.0.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=

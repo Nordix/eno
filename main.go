@@ -96,14 +96,16 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "L2ServiceAttachment")
 		os.Exit(1)
 	}
-	/*if err = (&controllers.L2ServiceReconciler{
+
+	// L2Service Reconciler Initialization
+	if err = (&controllers.L2ServiceReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("L2Service"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L2Service")
 		os.Exit(1)
-	}*/
+	}
 
 	// +kubebuilder:scaffold:builder
 

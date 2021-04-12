@@ -18,11 +18,17 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 )
@@ -40,9 +46,9 @@ type L2ServiceReconciler struct {
 
 func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
-	_ = context.Background()
-	_ = r.Log.WithValues("l2service", req.NamespacedName)
-	/*ctx := context.Background()
+	//_ = context.Background()
+	//_ = r.Log.WithValues("l2service", req.NamespacedName)
+	ctx := context.Background()
 	log := r.Log.WithValues("l2service", req.NamespacedName)
 
 	// Fetch the L2Service instance
@@ -67,60 +73,70 @@ func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		// Define a new L2BridgeDomain
 		brDom, err := r.DefineBridgeDomain(ctx, log, lTwoSvc)
 		if err != nil {
-			if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+			/*if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
 				return ctrl.Result{}, err
-			}
+			}*/
 			return ctrl.Result{}, err
 		}
 		log.Info("Creating a new L2BridgeDomain", "L2BridgeDomain.Name", lTwoSvc.Name)
 		err = r.Create(ctx, brDom)
 		if err != nil {
 			// Update status of L2Service resource with error phase
-			if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+			/*if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
 				return ctrl.Result{}, err
-			}
+			}*/
 			log.Error(err, "Failed to create new L2BridgeDomain", "L2BridgeDomain.Name", lTwoSvc.Name)
 			return ctrl.Result{}, err
 		}
 		// L2BridgeDomain created successfully - return
 		// Update status of L2Service resource with pending phase
-		if err := r.UpdateStatus(ctx, req, log, "pending", "Creation pending"); err != nil {
+		/*if err := r.UpdateStatus(ctx, req, log, "pending", "Creation pending"); err != nil {
 			return ctrl.Result{}, err
-		}
+		}*/
 		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
 		// Update status of L2Service resource with error phase
-		if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+		/*if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
 			return ctrl.Result{}, err
-		}
+		}*/
 		log.Error(err, "Failed to get L2BridgeDomain")
 		return ctrl.Result{}, err
 	}
 
-	desiredCPList := r.DesiredCPList()
-	actualCPList := found.Spec.ConnectionPoints
+	candidateBrDom, err := r.DefineBridgeDomain(ctx, log, lTwoSvc)
 
-	if r.DiffDesiredActual() {
-		found.Spec.ConnectionPoints = desiredCPList
+	if err != nil {
+		// Update status of L2ServiceAttachment resource with error phase
+		/*if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+			return ctrl.Result{}, err
+		}*/
+		log.Error(err, "Failed to define candidate L2BridgeDomain")
+		return ctrl.Result{}, err
+	}
+	desiredCPs := candidateBrDom.Spec.ConnectionPoints
+	actualCPs := found.Spec.ConnectionPoints
+
+	if r.DiffDesiredActual(desiredCPs, actualCPs) {
+		found.Spec.ConnectionPoints = desiredCPs
 		err = r.Update(ctx, found)
 		if err != nil {
 			// Update status of L2Service resource with error phase
-			if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+			/*if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
 				return ctrl.Result{}, err
-			}
+			}*/
 			log.Error(err, "Failed to update L2BridgeDomain", "L2BridgeDomain.Name", found.Name)
 			return ctrl.Result{}, err
 		}
 		// Update status of L2Service resource with pending phase
-		if err := r.UpdateStatus(ctx, req, log, "pending", "Update pending"); err != nil {
+		/*if err := r.UpdateStatus(ctx, req, log, "pending", "Update pending"); err != nil {
 			return ctrl.Result{}, err
-		}
+		}*/
 
 		return ctrl.Result{Requeue: true}, nil
 	}
 
 	// Update status of L2Service resource with ready phase
-	if err := r.UpdateStatus(ctx, req, log, "ready", "Resources has been created"); err != nil {
+	/*if err := r.UpdateStatus(ctx, req, log, "ready", "Resources has been created"); err != nil {
 		return ctrl.Result{}, err
 	}*/
 
@@ -130,5 +146,22 @@ func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *L2ServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&enov1alpha1.L2Service{}).
+		Watches(&source.Kind{Type: &enov1alpha1.L2ServiceAttachment{}}, &handler.EnqueueRequestsFromMapFunc{
+			ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
+				var requests = []reconcile.Request{}
+				svcAtt := o.Object.(*enov1alpha1.L2ServiceAttachment)
+				mylist := svcAtt.Spec.L2Services
+				for _, lTwoServiceName := range svcAtt.Spec.L2Services {
+					requests = append(requests, reconcile.Request{
+						NamespacedName: types.NamespacedName{
+							Name: lTwoServiceName,
+						},
+					})
+				}
+				fmt.Printf("%+v\n", "EDWWWWWW")
+				fmt.Printf("%+v\n", mylist[0])
+				return requests
+			}),
+		}).
 		Complete(r)
 }

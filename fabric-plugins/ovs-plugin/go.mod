@@ -15,7 +15,4 @@ require (
 	sigs.k8s.io/controller-runtime v0.6.0
 )
 
-replace (
-
-	github.com/Nordix/eno => /root/go/src/github.com/Nordix/eno/eno
-)
+replace github.com/Nordix/eno => github.com/Nordix/eno v0.0.0-20210407164847-26f844680b25
