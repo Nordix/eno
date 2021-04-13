@@ -251,3 +251,17 @@ func (r *L2ServiceReconciler) DiffDesiredActual(desiredCPs, actualCPs []string) 
 	}
 	return false
 }
+
+// UpdateStatus - Update the Status of L2Service instance
+func (r *L2ServiceReconciler) UpdateStatus(ctx context.Context, log logr.Logger, statusCPs []string,
+	phase, message string, lTwoSvc *enov1alpha1.L2Service) error {
+	lTwoSvc.Status.ConnectionPoints = statusCPs
+	lTwoSvc.Status.Phase = phase
+	lTwoSvc.Status.Message = message
+	if err := r.Status().Update(ctx, lTwoSvc); err != nil {
+		log.Error(err, "Failed to update L2Service status")
+		return err
+	}
+	return nil
+
+}

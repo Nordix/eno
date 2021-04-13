@@ -9,56 +9,56 @@ data:
     - hostname: master0
       interfaceName: ens3
       switchName: br_admin
-      switchPort: vnet0
+      switchPort: vnet8
     - hostname: master0
       interfaceName: ens4
       switchName: br_public
-      switchPort: vnet1
+      switchPort: vnet9
     - hostname: master0
       interfaceName: ens5
       switchName: br_mgmt
-      switchPort: vnet2
+      switchPort: vnet10
     - hostname: master0
       interfaceName: ens6
       switchName: br_neutron
-      switchPort: vnet3
+      switchPort: vnet11
     - hostname: master0
       interfaceName: ens26
       switchName: br-fabric
-      switchPort: vnet4
+      switchPort: vnet12
     - hostname: master0
       interfaceName: ens27
       switchName: br-fabric
-      switchPort: vnet5
+      switchPort: vnet13
     - hostname: node0
       interfaceName: ens3
       switchName: br_admin
-      switchPort: vnet6
+      switchPort: vnet0
     - hostname: node0
       interfaceName: ens4
       switchName: br_public
-      switchPort: vnet7
+      switchPort: vnet1
     - hostname: node0
       interfaceName: ens5
       switchName: br_mgmt
-      switchPort: vnet8
+      switchPort: vnet2
     - hostname: node0
       interfaceName: ens6
       switchName: br_neutron
-      switchPort: vnet9
+      switchPort: vnet3
     - hostname: node0
       interfaceName: ens10
       switchName: br-fabric
-      switchPort: vnet10
+      switchPort: vnet4
     - hostname: node0
       interfaceName: ens11
       switchName: br-fabric
-      switchPort: vnet11
+      switchPort: vnet5
     - hostname: node0
       interfaceName: ens12
       switchName: br-fabric
-      switchPort: vnet12
+      switchPort: vnet6
     - hostname: node0
       interfaceName: ens13
       switchName: br-fabric
-      switchPort: vnet13
+      switchPort: vnet7

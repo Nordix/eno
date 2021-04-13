@@ -55,6 +55,21 @@ spec:
           type: object
         status:
           description: L2ServiceStatus defines the observed state of L2Service
+          properties:
+            ConnectionPoints:
+              items:
+                type: string
+              type: array
+            Message:
+              type: string
+            Phase:
+              enum:
+              - pending
+              - ready
+              - error
+              - terminating
+              - deleted
+              type: string
           type: object
       type: object
   version: v1alpha1

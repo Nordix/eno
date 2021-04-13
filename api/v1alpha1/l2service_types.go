@@ -40,6 +40,11 @@ type L2ServiceSpec struct {
 type L2ServiceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	ConnectionPoints []string `json:"ConnectionPoints,omitempty"`
+	// +kubebuilder:validation:Enum=pending;ready;error;terminating;deleted
+	Phase   string `json:"Phase,omitempty"`
+	Message string `json:"Message,omitempty"`
 }
 
 // +kubebuilder:object:root=true

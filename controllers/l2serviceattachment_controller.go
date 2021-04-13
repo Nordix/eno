@@ -168,5 +168,6 @@ func (r *L2ServiceAttachmentReconciler) SetupWithManager(mgr ctrl.Manager) error
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&enov1alpha1.L2ServiceAttachment{}).
 		Owns(&nettypes.NetworkAttachmentDefinition{}).
+		WithEventFilter(ignoreStatusChangePredicate()).
 		Complete(r)
 }
