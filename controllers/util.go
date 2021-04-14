@@ -198,6 +198,33 @@ func (r *L2ServiceAttachmentReconciler) getRouteObjs(ctx context.Context, subnet
 	return routeObjs, nil
 }
 
+// Check status of the L2Services so we can
+// update the status of L2ServiceAttachment
+func (r *L2ServiceAttachmentReconciler) CheckL2ServicesStatus(ctx context.Context, log logr.Logger, s *enov1alpha1.L2ServiceAttachment) (bool, error) {
+	for _, ltwoSvcName := range s.Spec.L2Services {
+		tempObj := &enov1alpha1.L2Service{}
+		if err := r.Get(ctx, types.NamespacedName{Name: ltwoSvcName}, tempObj); err != nil {
+			log.Error(err, "Failed to find L2Service", "L2Service.Name", ltwoSvcName)
+			return false, err
+		}
+		if tempObj.Status.Phase == "ready" {
+			if !common.SearchInSlice(s.Spec.ConnectionPoint, tempObj.Status.ConnectionPoints) {
+				err := errors.New("Missing ConnectionPoint from L2Service")
+				log.Error(err, "Failed to find ConnectionPoint.Name", s.Spec.ConnectionPoint, "in status of", "L2Service.Name", ltwoSvcName)
+				return false, err
+			}
+		} else if tempObj.Status.Phase == "error" {
+			err := errors.New("L2Service in error state")
+			log.Error(err, "Failed L2Service", "L2Service.Name", ltwoSvcName)
+			return false, err
+		} else {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 // L2Service Utils //
 
 // DefineBridgeDomain - Create and returns a L2BridgeDomain resource

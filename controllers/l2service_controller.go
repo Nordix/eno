@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -157,11 +156,11 @@ func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *L2ServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&enov1alpha1.L2Service{}).
+		Owns(&enov1alpha1.L2BridgeDomain{}).
 		Watches(&source.Kind{Type: &enov1alpha1.L2ServiceAttachment{}}, &handler.EnqueueRequestsFromMapFunc{
 			ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
 				var requests = []reconcile.Request{}
 				svcAtt := o.Object.(*enov1alpha1.L2ServiceAttachment)
-				mylist := svcAtt.Spec.L2Services
 				for _, lTwoServiceName := range svcAtt.Spec.L2Services {
 					requests = append(requests, reconcile.Request{
 						NamespacedName: types.NamespacedName{
@@ -169,11 +168,9 @@ func (r *L2ServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 						},
 					})
 				}
-				fmt.Printf("%+v\n", "EDWWWWWW")
-				fmt.Printf("%+v\n", mylist[0])
 				return requests
 			}),
 		}).
-		WithEventFilter(ignoreStatusChangePredicate()).
+		WithEventFilter(lTwoServicePredicate()).
 		Complete(r)
 }

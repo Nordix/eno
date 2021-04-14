@@ -156,6 +156,20 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 
 		return ctrl.Result{Requeue: true}, nil
 	}
+
+	// Section that we need to exclude when we use ENO without a fabric plugin
+	requeue, err := r.CheckL2ServicesStatus(ctx, log, svcAtt)
+	if err != nil {
+		// Update status of L2ServiceAttachment resource with error phase
+		if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+	if requeue {
+		return ctrl.Result{Requeue: true}, nil
+	}
+	//End of the section
+
 	// Update status of L2ServiceAttachment resource with ready phase
 	if err := r.UpdateStatus(ctx, req, log, "ready", "Resources has been created"); err != nil {
 		return ctrl.Result{}, err
