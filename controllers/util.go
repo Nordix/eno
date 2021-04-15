@@ -209,9 +209,7 @@ func (r *L2ServiceAttachmentReconciler) CheckL2ServicesStatus(ctx context.Contex
 		}
 		if tempObj.Status.Phase == "ready" {
 			if !common.SearchInSlice(s.Spec.ConnectionPoint, tempObj.Status.ConnectionPoints) {
-				err := errors.New("Missing ConnectionPoint from L2Service")
-				log.Error(err, "Failed to find ConnectionPoint.Name", s.Spec.ConnectionPoint, "in status of", "L2Service.Name", ltwoSvcName)
-				return false, err
+				return true, nil
 			}
 		} else if tempObj.Status.Phase == "error" {
 			err := errors.New("L2Service in error state")
