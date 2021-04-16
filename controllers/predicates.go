@@ -6,10 +6,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-func ignoreStatusChangePredicate() predicate.Predicate {
+func lTwoServiceAttPredicate() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates to CR status in which case metadata.Generation does not change
+			// Except for update in L2Service objects
+
+			lTwoSvc, ok := e.ObjectNew.(*enov1alpha1.L2Service)
+			if ok {
+				if e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration() {
+					return true
+				} else {
+					if lTwoSvc.Status.Phase == "error" {
+						return true
+					}
+				}
+			}
+
 			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
 		},
 	}

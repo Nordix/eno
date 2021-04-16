@@ -27,6 +27,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/Nordix/eno/pkg/cni"
@@ -98,7 +101,7 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		}
 		// NetAttachDef created successfully - return
 		// Update status of L2ServiceAttachment resource with pending phase
-		if err := r.UpdateStatus(ctx, req, log, "pending", "Creation pending"); err != nil {
+		if err := r.UpdateStatus(ctx, req, log, "pending", "Configuration pending"); err != nil {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{Requeue: true}, nil
@@ -150,7 +153,7 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 			return ctrl.Result{}, err
 		}
 		// Update status of L2ServiceAttachment resource with pending phase
-		if err := r.UpdateStatus(ctx, req, log, "pending", "Update pending"); err != nil {
+		if err := r.UpdateStatus(ctx, req, log, "pending", "Configuration pending"); err != nil {
 			return ctrl.Result{}, err
 		}
 
@@ -164,8 +167,13 @@ func (r *L2ServiceAttachmentReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		if err := r.UpdateStatus(ctx, req, log, "error", err.Error()); err != nil {
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{}, err
 	}
 	if requeue {
+		// Update status of L2ServiceAttachment resource with pending phase
+		if err := r.UpdateStatus(ctx, req, log, "pending", "Configuration pending"); err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{Requeue: true}, nil
 	}
 	//End of the section
@@ -182,6 +190,26 @@ func (r *L2ServiceAttachmentReconciler) SetupWithManager(mgr ctrl.Manager) error
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&enov1alpha1.L2ServiceAttachment{}).
 		Owns(&nettypes.NetworkAttachmentDefinition{}).
-		WithEventFilter(ignoreStatusChangePredicate()).
+		Watches(&source.Kind{Type: &enov1alpha1.L2Service{}}, &handler.EnqueueRequestsFromMapFunc{
+			ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
+				var requests = []reconcile.Request{}
+				var l2SvcAttList enov1alpha1.L2ServiceAttachmentList
+				_ = mgr.GetClient().List(context.TODO(), &l2SvcAttList)
+				for _, lTwoSvcAtt := range l2SvcAttList.Items {
+					for _, lTwoSvcName := range lTwoSvcAtt.Spec.L2Services {
+						if lTwoSvcName == o.Meta.GetName() {
+							requests = append(requests, reconcile.Request{
+								NamespacedName: types.NamespacedName{
+									Name:      lTwoSvcAtt.Name,
+									Namespace: lTwoSvcAtt.Namespace,
+								},
+							})
+						}
+					}
+				}
+				return requests
+			}),
+		}).
+		WithEventFilter(lTwoServiceAttPredicate()).
 		Complete(r)
 }

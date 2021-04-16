@@ -90,7 +90,7 @@ func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		// L2BridgeDomain created successfully - return
 		// Update status of L2Service resource with pending phase
-		if err := r.UpdateStatus(ctx, log, statusCPs, "pending", "Creation pending", lTwoSvc); err != nil {
+		if err := r.UpdateStatus(ctx, log, statusCPs, "pending", "Configuration pending", lTwoSvc); err != nil {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{Requeue: true}, nil
@@ -128,7 +128,7 @@ func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, err
 		}
 		// Update status of L2Service resource with pending phase
-		if err := r.UpdateStatus(ctx, log, statusCPs, "pending", "Update pending", lTwoSvc); err != nil {
+		if err := r.UpdateStatus(ctx, log, statusCPs, "pending", "Configuration pending", lTwoSvc); err != nil {
 			return ctrl.Result{}, err
 		}
 
@@ -147,6 +147,10 @@ func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		return ctrl.Result{}, err
 	} else {
+		// Update status of L2Service resource with pending phase
+		if err := r.UpdateStatus(ctx, log, statusCPs, "pending", "Configuration pending", lTwoSvc); err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{Requeue: true}, nil
 	}
 
