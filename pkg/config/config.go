@@ -12,12 +12,14 @@ import (
 )
 
 const (
-	defaultKernelCni = "ovs"
+	defaultKernelCni       = "ovs"
+	defaultUseFabricPlugin = false
 )
 
 // Configuration instance
 type Configuration struct {
-	KernelCni string `yaml:"KernelCni"`
+	KernelCni       string `yaml:"KernelCni"`
+	UseFabricPlugin bool   `yaml:"UseFabricPlugin"`
 }
 
 // NewConfiguration - creates instance of Configuration
@@ -55,6 +57,9 @@ func (c *Configuration) addDefault() error {
 
 	if c.KernelCni == "" {
 		c.KernelCni = defaultKernelCni
+	}
+	if !c.UseFabricPlugin {
+		c.UseFabricPlugin = defaultUseFabricPlugin
 	}
 	return nil
 }

@@ -97,14 +97,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	// L2Service Reconciler Initialization
-	if err = (&controllers.L2ServiceReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("L2Service"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "L2Service")
-		os.Exit(1)
+	if cfg.UseFabricPlugin {
+		// L2Service Reconciler Initialization
+		if err = (&controllers.L2ServiceReconciler{
+			Client: mgr.GetClient(),
+			Log:    ctrl.Log.WithName("controllers").WithName("L2Service"),
+			Scheme: mgr.GetScheme(),
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "L2Service")
+			os.Exit(1)
+		}
 	}
 
 	// +kubebuilder:scaffold:builder

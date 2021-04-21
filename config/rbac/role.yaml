@@ -46,7 +46,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - eno.k8s.io.k8s.io
+  - eno.k8s.io
   resources:
   - l2services
   verbs:
@@ -58,7 +58,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - eno.k8s.io.k8s.io
+  - eno.k8s.io
   resources:
   - l2services/status
   verbs:
