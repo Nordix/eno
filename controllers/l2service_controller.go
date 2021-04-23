@@ -113,10 +113,14 @@ func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		log.Error(err, "Failed to define candidate L2BridgeDomain")
 		return ctrl.Result{}, err
 	}
+
+	desiredVlan := candidateBrDom.Spec.Vlan
 	desiredCPs := candidateBrDom.Spec.ConnectionPoints
+	actualVlan := found.Spec.Vlan
 	actualCPs := found.Spec.ConnectionPoints
 
-	if r.DiffDesiredActual(desiredCPs, actualCPs) {
+	if r.DiffDesiredActual(desiredCPs, actualCPs) || desiredVlan != actualVlan {
+		found.Spec.Vlan = desiredVlan
 		found.Spec.ConnectionPoints = desiredCPs
 		err = r.Update(ctx, found)
 		if err != nil {
