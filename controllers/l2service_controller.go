@@ -42,7 +42,7 @@ type L2ServiceReconciler struct {
 
 // +kubebuilder:rbac:groups=eno.k8s.io,resources=l2services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eno.k8s.io,resources=l2services/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=eno.k8s.io,resources=l2bridgedomains,verbs=get;list;watch
+// +kubebuilder:rbac:groups=eno.k8s.io,resources=l2bridgedomains,verbs=get;list;watch;create;update;patch;delete
 
 func (r *L2ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	statusCPs := []string{}

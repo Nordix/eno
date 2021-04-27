@@ -109,6 +109,13 @@ func main() {
 		}
 	}
 
+	// Webhook for L2Service kind
+	if err = (&enov1alpha1.L2Service{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "L2Service")
+		os.Exit(1)
+	}
+
+
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

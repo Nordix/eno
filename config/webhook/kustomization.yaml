@@ -1,6 +1,9 @@
 resources:
 - manifests.yaml
 - service.yaml
+- secret.yaml
 
+patchesStrategicMerge:
+- add_ca_bundle.yaml
 configurations:
 - kustomizeconfig.yaml

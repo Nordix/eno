@@ -22,8 +22,12 @@ rules:
   resources:
   - l2bridgedomains
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - eno.k8s.io
