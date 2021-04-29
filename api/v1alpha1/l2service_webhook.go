@@ -17,19 +17,19 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // log is for logging in this package.
 var (
 	l2servicelog = logf.Log.WithName("l2service-resource")
-	C	     client.Client
+	C            client.Client
 )
 
 func (r *L2Service) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -41,31 +41,31 @@ func (r *L2Service) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 func (r *L2Service) checkSegmentationIdUniqueness() error {
 	var l2SvcList L2ServiceList
-        _ = C.List(context.TODO(), &l2SvcList)
-        for _, l2Svc := range l2SvcList.Items {
-                if r.Spec.SegmentationID == l2Svc.Spec.SegmentationID {
-                        err := fmt.Errorf("L2Service with Segmentation ID %v already exists", r.Spec.SegmentationID)
-                        return err
-                }
-        }
+	_ = C.List(context.TODO(), &l2SvcList)
+	for _, l2Svc := range l2SvcList.Items {
+		if r.Spec.SegmentationID == l2Svc.Spec.SegmentationID {
+			err := fmt.Errorf("L2Service with Segmentation ID %v already exists", r.Spec.SegmentationID)
+			return err
+		}
+	}
 
 	return nil
 }
 
 func (r *L2Service) checkL2ServiceUsageByL2SvcAtt() error {
 	var l2SvcAttList L2ServiceAttachmentList
-        _ = C.List(context.TODO(), &l2SvcAttList)
-        for _, l2SvcAtt := range l2SvcAttList.Items {
-                for _, l2SvcName := range l2SvcAtt.Spec.L2Services {
-                        if r.Name == l2SvcName {
-                                err := fmt.Errorf("You can not update/delete L2Service %s while it is" +
-                                                        " in use by one or more L2ServiceAttachments", r.Name)
-                                return err
-                        }
-                }
-        }
+	_ = C.List(context.TODO(), &l2SvcAttList)
+	for _, l2SvcAtt := range l2SvcAttList.Items {
+		for _, l2SvcName := range l2SvcAtt.Spec.L2Services {
+			if r.Name == l2SvcName {
+				err := fmt.Errorf("You can not update/delete L2Service %s while it is"+
+					" in use by one or more L2ServiceAttachments", r.Name)
+				return err
+			}
+		}
+	}
 
-        return nil
+	return nil
 }
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -92,15 +92,15 @@ func (r *L2Service) ValidateCreate() error {
 func (r *L2Service) ValidateUpdate(old runtime.Object) error {
 	l2servicelog.Info("validate update", "name", r.Name)
 
-	if err := r.checkL2ServiceUsageByL2SvcAtt();err != nil {
+	if err := r.checkL2ServiceUsageByL2SvcAtt(); err != nil {
 		l2servicelog.Error(err, "L2Service validate update failed", "name", r.Name)
 		return err
 	}
 
-	if err := r.checkSegmentationIdUniqueness();err != nil {
-                l2servicelog.Error(err, "L2Service validate update failed", "name", r.Name)
-                return err
-        }
+	if err := r.checkSegmentationIdUniqueness(); err != nil {
+		l2servicelog.Error(err, "L2Service validate update failed", "name", r.Name)
+		return err
+	}
 	return nil
 }
 
@@ -108,7 +108,7 @@ func (r *L2Service) ValidateUpdate(old runtime.Object) error {
 func (r *L2Service) ValidateDelete() error {
 	l2servicelog.Info("validate delete", "name", r.Name)
 
-	if err := r.checkL2ServiceUsageByL2SvcAtt();err != nil {
+	if err := r.checkL2ServiceUsageByL2SvcAtt(); err != nil {
 		l2servicelog.Error(err, "L2Service validate delete failed", "name", r.Name)
 		return err
 	}

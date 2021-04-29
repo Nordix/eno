@@ -115,7 +115,6 @@ func main() {
 		os.Exit(1)
 	}
 
-
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
