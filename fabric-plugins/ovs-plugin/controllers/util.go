@@ -7,7 +7,6 @@ import (
 	enocorev1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	enocorecommon "github.com/Nordix/eno/pkg/common"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/go-logr/logr"
@@ -21,17 +20,16 @@ func (r *L2BridgeDomainReconciler) CreateDesiredState(ctx context.Context, log l
 	cpNodePoolInterfaces := make(map[string][]Interface)
 	desiredPorts := []string{}
 
-	// Create a list which holds the nodePool names that are included in the
-	// relevant L2BridgeDomain CPs. Each item of that list is unique
+	// Create a list which holds the nodePool names that are relevant to L2BridgeDomain CPs
+	// due to interfaces that are related to those CPs. Each item of that list is unique.
 
-	for _, cpName := range cpNames {
-		tempObj := &enocorev1alpha1.ConnectionPoint{}
-		if err := r.Get(ctx, types.NamespacedName{Name: cpName}, tempObj); err != nil {
-			log.Error(err, "Failed to find ConnectionPoint", "ConnectionPoint.Name", cpName)
-			return nil, err
-		}
-		if !enocorecommon.SearchInSlice(tempObj.Spec.NodePool, cpNodePools) {
-			cpNodePools = append(cpNodePools, tempObj.Spec.NodePool)
+	for _, cmNodePool := range nps {
+		for _, inter := range cmNodePool.PoolC.NetC.Interfaces {
+			if inter.ConnPoint != "" && enocorecommon.SearchInSlice(inter.ConnPoint, cpNames) &&
+				!enocorecommon.SearchInSlice(cmNodePool.PoolC.Name, cpNodePools) {
+				cpNodePools = append(cpNodePools, cmNodePool.PoolC.Name)
+				break
+			}
 		}
 	}
 
