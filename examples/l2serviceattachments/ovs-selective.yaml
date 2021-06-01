@@ -11,6 +11,4 @@ spec:
     - "l2service-thirteen"
     - "l2service-fourteen"
   ConnectionPoint: "cp-br-data"
-  PodInterfaceType: "kernel"
-  Implementation: "ovs"
   VlanType: "selectivetrunk"

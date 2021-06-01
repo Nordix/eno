@@ -36,10 +36,6 @@ spec:
         spec:
           description: L2ServiceSpec defines the desired state of L2Service
           properties:
-            PhysicalNet:
-              items:
-                type: string
-              type: array
             SegmentationID:
               maximum: 4094
               minimum: 1
@@ -50,7 +46,6 @@ spec:
               maxItems: 2
               type: array
           required:
-          - PhysicalNet
           - SegmentationID
           type: object
         status:

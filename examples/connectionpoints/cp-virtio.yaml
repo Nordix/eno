@@ -3,7 +3,10 @@ kind: ConnectionPoint
 metadata:
   name: cp-virtio
 spec:
-  Type: "pcidev"
-  NodePool: "virtio-pool"
-  PhysicalNet: "virtio-physnet"
-  ResourceName: "intel.com/virtio_net_device"
+  Description: "Represents the virtio_net_device interface pool"
+  SupportedCnis:
+    - Name: "host-device"
+      SupportedInterfaceTypes: ["kernel"]
+      Opts: '{
+        "PoolName": "intel.com/virtio_net_device"
+        }'

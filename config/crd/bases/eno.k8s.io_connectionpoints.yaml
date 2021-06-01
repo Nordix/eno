@@ -36,23 +36,28 @@ spec:
         spec:
           description: ConnectionPointSpec defines the desired state of ConnectionPoint
           properties:
-            InterfaceName:
+            Description:
               type: string
-            NodePool:
-              type: string
-            PhysicalNet:
-              type: string
-            ResourceName:
-              type: string
-            Type:
-              enum:
-              - kernel
-              - pcidev
-              type: string
+            SupportedCnis:
+              items:
+                properties:
+                  Name:
+                    type: string
+                  Opts:
+                    type: string
+                  SupportedInterfaceTypes:
+                    items:
+                      type: string
+                    minItems: 1
+                    type: array
+                required:
+                - Name
+                - SupportedInterfaceTypes
+                type: object
+              minItems: 1
+              type: array
           required:
-          - NodePool
-          - PhysicalNet
-          - Type
+          - SupportedCnis
           type: object
         status:
           description: ConnectionPointStatus defines the observed state of ConnectionPoint

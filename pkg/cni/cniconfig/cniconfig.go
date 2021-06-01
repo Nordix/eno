@@ -7,16 +7,20 @@ import (
 
 // CniConfig contains data required for cni's
 type CniConfig struct {
-	VlanIds  []uint16
-	VlanType string
-	Log      logr.Logger
+	VlanIds          []uint16
+	VlanType         string
+	PodInterfaceType string
+	CniOpts          map[string]interface{}
+	Log              logr.Logger
 }
 
 // NewCniConfig - creates an instance of CniConfig struct
-func NewCniConfig(vlans []uint16, typeOfVlan string, logger logr.Logger) *CniConfig {
+func NewCniConfig(vlans []uint16, typeOfVlan string, typeOfPodInterface string, cniOptions map[string]interface{}, logger logr.Logger) *CniConfig {
 	return &CniConfig{VlanIds: vlans,
-		VlanType: typeOfVlan,
-		Log:      logger}
+		VlanType:         typeOfVlan,
+		PodInterfaceType: typeOfPodInterface,
+		CniOpts:          cniOptions,
+		Log:              logger}
 }
 
 // IpamConfig contains data required by Ipam cni

@@ -32,8 +32,7 @@ type L2ServiceSpec struct {
 	// +kubebuilder:validation:Maximum:=4094
 	SegmentationID uint16 `json:"SegmentationID"`
 	// +kubebuilder:validation:MaxItems:=2
-	Subnets     []string `json:"Subnets,omitempty"`
-	PhysicalNet []string `json:"PhysicalNet"`
+	Subnets []string `json:"Subnets,omitempty"`
 }
 
 // L2ServiceStatus defines the observed state of L2Service
