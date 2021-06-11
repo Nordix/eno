@@ -1,0 +1,42 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: ovs-fabric-plugin-manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - connectionpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - l2bridgedomains
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - l2bridgedomains/status
+  verbs:
+  - get
+  - patch
+  - update

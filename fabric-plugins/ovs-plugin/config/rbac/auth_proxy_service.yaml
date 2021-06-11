@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    plugin-plane: fabric-plugin
+  name: ovs-fabric-plugin-metrics-service
+  namespace: system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    plugin-plane: fabric-plugin

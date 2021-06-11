@@ -32,7 +32,7 @@ type L2ServiceAttachmentSpec struct {
 	L2Services      []string `json:"L2Services"`
 	ConnectionPoint string   `json:"ConnectionPoint"`
 	// +kubebuilder:validation:Enum=kernel;dpdk
-	PodInterfaceType string `json:"PodInterfaceType"`
+	PodInterfaceType string `json:"PodInterfaceType,omitempty"`
 	// +kubebuilder:validation:Enum=trunk;access;selectivetrunk
 	VlanType string `json:"VlanType"`
 	// +kubebuilder:validation:Enum=ovs;host-device

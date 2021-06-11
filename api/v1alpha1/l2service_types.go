@@ -32,14 +32,18 @@ type L2ServiceSpec struct {
 	// +kubebuilder:validation:Maximum:=4094
 	SegmentationID uint16 `json:"SegmentationID"`
 	// +kubebuilder:validation:MaxItems:=2
-	Subnets     []string `json:"Subnets,omitempty"`
-	PhysicalNet []string `json:"PhysicalNet"`
+	Subnets []string `json:"Subnets,omitempty"`
 }
 
 // L2ServiceStatus defines the observed state of L2Service
 type L2ServiceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	ConnectionPoints []string `json:"ConnectionPoints,omitempty"`
+	// +kubebuilder:validation:Enum=pending;ready;error;terminating;deleted
+	Phase   string `json:"Phase,omitempty"`
+	Message string `json:"Message,omitempty"`
 }
 
 // +kubebuilder:object:root=true

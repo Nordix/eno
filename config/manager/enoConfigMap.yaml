@@ -5,4 +5,4 @@ metadata:
   namespace: system
 data:
   config.yaml: |
-    kernel_cni: ovs
+    UseFabricPlugin: true

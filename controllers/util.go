@@ -13,13 +13,16 @@ import (
 
 	"github.com/Nordix/eno/api/v1alpha1"
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
+	"github.com/Nordix/eno/pkg/common"
 	"github.com/Nordix/eno/pkg/l2serviceattachmentparser"
 	"github.com/go-logr/logr"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const nadFileName = "netattachdef.yaml"
@@ -193,4 +196,97 @@ func (r *L2ServiceAttachmentReconciler) getRouteObjs(ctx context.Context, subnet
 		routeObjs[subnet.GetName()] = tempObjs
 	}
 	return routeObjs, nil
+}
+
+// Check status of the L2Services so we can
+// update the status of L2ServiceAttachment
+func (r *L2ServiceAttachmentReconciler) CheckL2ServicesStatus(ctx context.Context, log logr.Logger, s *enov1alpha1.L2ServiceAttachment) (bool, error) {
+	for _, ltwoSvcName := range s.Spec.L2Services {
+		tempObj := &enov1alpha1.L2Service{}
+		if err := r.Get(ctx, types.NamespacedName{Name: ltwoSvcName}, tempObj); err != nil {
+			log.Error(err, "Failed to find L2Service", "L2Service.Name", ltwoSvcName)
+			return false, err
+		}
+		if tempObj.Status.Phase == "ready" {
+			if !common.SearchInSlice(s.Spec.ConnectionPoint, tempObj.Status.ConnectionPoints) {
+				return true, nil
+			}
+		} else if tempObj.Status.Phase == "error" {
+			err := errors.New("L2Service in error state")
+			log.Error(err, "Failed L2Service", "L2Service.Name", ltwoSvcName)
+			return false, err
+		} else {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// L2Service Utils //
+
+// DefineBridgeDomain - Create and returns a L2BridgeDomain resource
+func (r *L2ServiceReconciler) DefineBridgeDomain(ctx context.Context, log logr.Logger, s *enov1alpha1.L2Service) (*enov1alpha1.L2BridgeDomain, error) {
+	l2SvcAttList := &enov1alpha1.L2ServiceAttachmentList{}
+	listOpts := []client.ListOption{}
+	cpList := []string{}
+
+	if err := r.List(ctx, l2SvcAttList, listOpts...); err != nil {
+		log.Error(err, "Failed to list L2ServiceAttachments")
+		return nil, err
+	}
+
+	for _, l2SvcAtt := range l2SvcAttList.Items {
+		if common.SearchInSlice(s.Name, l2SvcAtt.Spec.L2Services) {
+			if !common.SearchInSlice(l2SvcAtt.Spec.ConnectionPoint, cpList) {
+				cpList = append(cpList, l2SvcAtt.Spec.ConnectionPoint)
+			}
+		}
+	}
+
+	brDom := &enov1alpha1.L2BridgeDomain{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: s.Name,
+		},
+		Spec: enov1alpha1.L2BridgeDomainSpec{
+			Vlan:             s.Spec.SegmentationID,
+			ConnectionPoints: cpList,
+		},
+	}
+
+	// Set L2Service instance as the owner and controller
+	// of L2BridgeDomain instance
+	ctrl.SetControllerReference(s, brDom, r.Scheme)
+	return brDom, nil
+}
+
+func (r *L2ServiceReconciler) DiffDesiredActual(desiredCPs, actualCPs []string) bool {
+	exists := make(map[string]bool)
+
+	if len(desiredCPs) != len(actualCPs) {
+		return true
+	}
+	for _, cp := range desiredCPs {
+		exists[cp] = true
+	}
+	for _, cp := range actualCPs {
+		if !exists[cp] {
+			return true
+		}
+	}
+	return false
+}
+
+// UpdateStatus - Update the Status of L2Service instance
+func (r *L2ServiceReconciler) UpdateStatus(ctx context.Context, log logr.Logger, statusCPs []string,
+	phase, message string, lTwoSvc *enov1alpha1.L2Service) error {
+	lTwoSvc.Status.ConnectionPoints = statusCPs
+	lTwoSvc.Status.Phase = phase
+	lTwoSvc.Status.Message = message
+	if err := r.Status().Update(ctx, lTwoSvc); err != nil {
+		log.Error(err, "Failed to update L2Service status")
+		return err
+	}
+	return nil
+
 }

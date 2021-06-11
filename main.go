@@ -27,11 +27,12 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
+
 	enov1alpha1 "github.com/Nordix/eno/api/v1alpha1"
 	"github.com/Nordix/eno/controllers"
 	"github.com/Nordix/eno/pkg/cni"
 	"github.com/Nordix/eno/pkg/config"
-	nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -95,6 +96,25 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "L2ServiceAttachment")
 		os.Exit(1)
 	}
+
+	if cfg.UseFabricPlugin {
+		// L2Service Reconciler Initialization
+		if err = (&controllers.L2ServiceReconciler{
+			Client: mgr.GetClient(),
+			Log:    ctrl.Log.WithName("controllers").WithName("L2Service"),
+			Scheme: mgr.GetScheme(),
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "L2Service")
+			os.Exit(1)
+		}
+	}
+
+	// Webhook for L2Service kind
+	if err = (&enov1alpha1.L2Service{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "L2Service")
+		os.Exit(1)
+	}
+
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

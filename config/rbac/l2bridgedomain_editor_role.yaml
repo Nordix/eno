@@ -1,0 +1,24 @@
+# permissions for end users to edit l2bridgedomains.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: l2bridgedomain-editor-role
+rules:
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - l2bridgedomains
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - l2bridgedomains/status
+  verbs:
+  - get

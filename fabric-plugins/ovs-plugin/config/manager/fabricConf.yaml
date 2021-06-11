@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ovs-fabric-plugin-fabric-conf
+  namespace: system
+  #namespace: test
+data:
+  links: |
+    - hostname: master0
+      interfaceName: ens3
+      switchName: br_admin
+      switchPort: vnet8
+    - hostname: master0
+      interfaceName: ens4
+      switchName: br_public
+      switchPort: vnet9
+    - hostname: master0
+      interfaceName: ens5
+      switchName: br_mgmt
+      switchPort: vnet10
+    - hostname: master0
+      interfaceName: ens6
+      switchName: br_neutron
+      switchPort: vnet11
+    - hostname: master0
+      interfaceName: ens26
+      switchName: br-fabric
+      switchPort: vnet12
+    - hostname: master0
+      interfaceName: ens27
+      switchName: br-fabric
+      switchPort: vnet13
+    - hostname: node0
+      interfaceName: ens3
+      switchName: br_admin
+      switchPort: vnet0
+    - hostname: node0
+      interfaceName: ens4
+      switchName: br_public
+      switchPort: vnet1
+    - hostname: node0
+      interfaceName: ens5
+      switchName: br_mgmt
+      switchPort: vnet2
+    - hostname: node0
+      interfaceName: ens6
+      switchName: br_neutron
+      switchPort: vnet3
+    - hostname: node0
+      interfaceName: ens10
+      switchName: br-fabric
+      switchPort: vnet4
+    - hostname: node0
+      interfaceName: ens11
+      switchName: br-fabric
+      switchPort: vnet5
+    - hostname: node0
+      interfaceName: ens12
+      switchName: br-fabric
+      switchPort: vnet6
+    - hostname: node0
+      interfaceName: ens13
+      switchName: br-fabric
+      switchPort: vnet7

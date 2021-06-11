@@ -5,3 +5,4 @@ resources:
 - eno_v1alpha1_l2service.yaml
 - eno_v1alpha1_subnet.yaml
 - eno_v1alpha1_route.yaml
+- eno_v1alpha1_l2bridgedomain.yaml
