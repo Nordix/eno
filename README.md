@@ -21,7 +21,7 @@
 > In fact, [ENO](https://github.com/Nordix/eno) is an attempt at providing a network orchestration API on the K8s cluster for use by the cloud admin to automate the necessary configuration inside the cluster and on the DC fabric. ENO generates the artefacts (e.g. network attachment definition CRDs) that application pods can refer to connect to networks. A CNI is responsible for the plumbing of a given pod interface to an existing network at pod creation time based on the NAD and infrastructure established by ENO at network creation time. The authorization of a pod for connecting to a network depends if it is allowed to use the NAD (e.g. using namespaces). Below is an example workflow showcasing E2E K8s secondary network orchestration using OvS in BareMetal based deployment.
 
 <figure class="image">
-<img alt="E2E K8s Secondary Network Orchestration" src="./E2E_K8s_Secondary_Network_Orchestration.jpg" />
+<img alt="E2E K8s Secondary Network Orchestration" src="./docs/images/E2E_K8s_Secondary_Network_Orchestration.jpg" />
 <figcaption>Figure 1: E2E K8s Secondary Network Orchestration using OvS in BareMetal based deployment</figcaption>
 </figure>
 
@@ -61,7 +61,7 @@
 >
 
 <figure class="image">
-<img alt="Secondary External Network Data Model" src="./Secondary_External_Network_DataModel.jpg" />
+<img alt="Secondary External Network Data Model" src="./docs/images/Secondary_External_Network_DataModel.jpg" />
 <figcaption>Figure 2: Secondary External Network Data Model</figcaption>
 </figure>
 
@@ -96,13 +96,12 @@
 >
 > **ConnectionPoint API Object**
 >
-> - **Purpose:** Represents  one or several  network connection points on a set of compute hosts or worker VMs. One ConnectionPoint object can reference multiple real connection points by referring to a number of equally equipped nodes with its NodePool attribute. ConnectionPoint objects are created at cluster creation time and only referenced by clients in other API objects.
-
-<figure class="image">
-<img alt="ConnectionPoint Attributes" src="./ConnectionPoint_Attributes.jpg" />
-<figcaption>Figure 3: ConnectionPoint Attributes (##TODO: Convert in markdown format)</figcaption>
-</figure>
-
+> - **Purpose:** Represents  one or several  network connection points on a set of compute hosts or worker VMs. One ConnectionPoint object can reference multiple real connection points by referring to a number of equally equipped nodes with its NodeSelectorLabels attribute. ConnectionPoint objects are created at cluster creation time and only referenced by clients in other API objects.
+> - **Attributes:**
+>   - *Description:* A short description about this object in a free text.
+>   - *NodeSelectorLabels:* List of node labels through which a ConnectionPoint object can reference multiple real connection points by referring to a number of equally equipped nodes with node label attribute. If empty then the ConnectionPoint object spans across all nodes.
+>   - *SupportedCnis:* List of supported CNIs (like, OVS, MacVLAN, etc.) by the ConnectionPoint object.
+>
 ### ENO Southbound-interface (SBI) Data Model
 
 > Basic API Concepts
@@ -129,13 +128,13 @@
 >   - *ConnectionPoints:* list of ConnectionPoints names which will be translated internally in a group of Fabric trunk ports where the corresponding Vlan should be opened.
 
 <figure class="image">
-<img alt="L2BridgeDomain" src="./L2BridgeDomain.jpg" />
-<figcaption>Figure 4: L2BridgeDomain CRD</figcaption>
+<img alt="L2BridgeDomain" src="./docs/images/L2BridgeDomain.jpg" />
+<figcaption>Figure 3: L2BridgeDomain CRD</figcaption>
 </figure>
 
 #### ENO Components Overview
 
-> Figure 5 depicts all the different components of ENO framework and how those components interact during the creation of a single L2ServiceAttachment CR.
+> Figure 4 depicts all the different components of ENO framework and how those components interact during the creation of a single L2ServiceAttachment CR.
 >
 > 1. Initially a L2ServiceAttachment object is getting created.
 > 2. The L2ServiceAttachment controller will watch for those kind of events and will create the corresponding NAD and also will wait for the associated VLANs to be opened on the fabric.
@@ -144,8 +143,8 @@
 > 5. When the VLANs has been opened on the fabric ports then the creation of the L2ServiceAttachment object is considered successful and the status will change to a state equal to "Ready".
 
 <figure class="image">
-<img alt="Eno Components Overview" src="./EnoComponentsOverview.jpg" />
-<figcaption>Figure 5: ENO Components Overview</figcaption>
+<img alt="Eno Components Overview" src="./docs/images/EnoComponentsOverview.jpg" />
+<figcaption>Figure 4: ENO Components Overview</figcaption>
 </figure>
 
 #### ENO Fabric Plugin
@@ -159,8 +158,8 @@
 > 4. The L2BridgeDomain controller then compares the desired state with the actual state for that specific vlan and if those states differ then configures the fabric ports accordingly.
 
 <figure class="image">
-<img alt="Eno Fabric Plugin" src="./EnoFabricPlugin.jpg" />
-<figcaption>Figure 6: ENO Fabric Plugin</figcaption>
+<img alt="Eno Fabric Plugin" src="./docs/images/EnoFabricPlugin.jpg" />
+<figcaption>Figure 5: ENO Fabric Plugin</figcaption>
 </figure>
 
 > The current ENO implementation focuses on the L2 ("VLAN provider network") use case for connecting secondary pod interfaces to a DCGW. To begin with, that's the most common scenario to automate for sure. It doesn't exclude other external network scenarios. The ENO APIs should be extendable to cover those. Calico as primary CNI with MetalLB as load balancer for incoming external traffic would, for example be an L3 use case that has already been considered and would be included in second phase. Similarly, we have plans to evaluate [NSM](https://github.com/networkservicemesh/networkservicemesh) in subsequent releases to extend ENO APIs to cover use-cases that are been addressed via NSM.
