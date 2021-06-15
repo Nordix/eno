@@ -105,6 +105,9 @@ func NewOvsCni() *OvsCni {
 // HandleCni - Handles the ovs-cni case
 func (ovscni *OvsCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string]interface{}) (string, error) {
 	manifestFile := "ovs.txt"
+
+	var ok bool
+
 	//For VlanType=trunk we do not need to do anything
 	switch cniConf.VlanType {
 	case "access":
@@ -125,6 +128,22 @@ func (ovscni *OvsCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string]in
 		cniConf.Log.Info("Transparent Trunk case in cluster level")
 	}
 	data["ResourcePrefix"] = "ovs-cni.network.kubevirt.io/"
+
+	//Check if PodInterfaceType is supported by ovs cni
+	if cniConf.PodInterfaceType != "kernel" {
+		err := fmt.Errorf(" %s PodInterfaceType is not supported by OvS CNI", cniConf.PodInterfaceType)
+		cniConf.Log.Error(err, "OvS CNI unsupported PodInterfaceType")
+		return "", err
+	}
+
+	//Parse CniOpts
+	data["NetObjName"], ok = cniConf.CniOpts["BridgeName"]
+	if !ok || data["NetObjName"] == "" {
+		err := errors.New("The BridgeName field is either missing or is empty")
+		cniConf.Log.Error(err, "OvS CNI Opts are mallformed")
+		return "", err
+	}
+
 	return manifestFile, nil
 }
 
@@ -139,6 +158,9 @@ func NewHostDevCni() *HostDevCni {
 // HandleCni - Handles the host-device-cni case
 func (hdcni *HostDevCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string]interface{}) (string, error) {
 	manifestFile := "host-device.txt"
+
+	var ok bool
+
 	switch cniConf.VlanType {
 	case "access":
 		err := errors.New("Host-device cni does not support VlanType=access")
@@ -151,6 +173,22 @@ func (hdcni *HostDevCni) HandleCni(cniConf *cniconfig.CniConfig, data map[string
 	case "trunk":
 		cniConf.Log.Info("Transparent Trunk case in Host-device cni")
 	}
+
+	//Check if PodInterfaceType is supported by host-device cni
+	if cniConf.PodInterfaceType != "kernel" {
+		err := fmt.Errorf(" %s PodInterfaceType is not supported by HostDevice CNI", cniConf.PodInterfaceType)
+		cniConf.Log.Error(err, "HostDevice CNI unsupported PodInterfaceType")
+		return "", err
+	}
+
+	//Parse CniOpts
+	data["NetObjName"], ok = cniConf.CniOpts["PoolName"]
+	if !ok || data["NetObjName"] == "" {
+		err := errors.New("The PoolName field is either missing or is empty")
+		cniConf.Log.Error(err, "HostDevice CNI Opts are mallformed")
+		return "", err
+	}
+
 	return manifestFile, nil
 }
 

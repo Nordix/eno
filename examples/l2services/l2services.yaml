@@ -5,7 +5,6 @@ metadata:
 spec:
   SegmentationID: 10
   Subnets: ["ipv4-subnet-ten"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -14,7 +13,6 @@ metadata:
 spec:
   SegmentationID: 11
   Subnets: ["ipv4-subnet-eleven"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -23,7 +21,6 @@ metadata:
 spec:
   SegmentationID: 12
   Subnets: ["ipv4-subnet-twelve"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -32,7 +29,6 @@ metadata:
 spec:
   SegmentationID: 13
   Subnets: ["ipv4-subnet-thirteen"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -41,7 +37,6 @@ metadata:
 spec:
   SegmentationID: 14
   Subnets: ["ipv4-subnet-fourteen"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -50,7 +45,6 @@ metadata:
 spec:
   SegmentationID: 15
   Subnets: ["ipv4-subnet-fifteen"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -59,7 +53,6 @@ metadata:
 spec:
   SegmentationID: 16
   Subnets: ["ipv4-subnet-sixteen"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -68,7 +61,6 @@ metadata:
 spec:
   SegmentationID: 17
   Subnets: ["ipv4-subnet-seventeen"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -77,7 +69,6 @@ metadata:
 spec:
   SegmentationID: 18
   Subnets: ["ipv4-subnet-eighteen"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -86,7 +77,6 @@ metadata:
 spec:
   SegmentationID: 19
   Subnets: ["ipv4-subnet-nineteen"]
-  PhysicalNet: ["PhysDC"]
 ---
 apiVersion: eno.k8s.io/v1alpha1
 kind: L2Service
@@ -95,4 +85,3 @@ metadata:
 spec:
   SegmentationID: 20
   Subnets: ["ipv6-subnet-twenty", "ipv4-subnet-twenty"]
-  PhysicalNet: ["PhysDC"]

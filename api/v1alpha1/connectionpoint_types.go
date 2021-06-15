@@ -28,12 +28,16 @@ type ConnectionPointSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// +kubebuilder:validation:Enum=kernel;pcidev
-	Type          string `json:"Type"`
-	NodePool      string `json:"NodePool"`
-	PhysicalNet   string `json:"PhysicalNet"`
-	InterfaceName string `json:"InterfaceName,omitempty"`
-	ResourceName  string `json:"ResourceName,omitempty"`
+	Description string `json:"Description,omitempty"`
+	// +kubebuilder:validation:MinItems:=1
+	SupportedCnis []SupportedCni `json:"SupportedCnis"`
+}
+
+type SupportedCni struct {
+	Name string `json:"Name"`
+	// +kubebuilder:validation:MinItems:=1
+	SupportedInterfaceTypes []string `json:"SupportedInterfaceTypes"`
+	Opts                    string   `json:"Opts,omitempty"`
 }
 
 // ConnectionPointStatus defines the observed state of ConnectionPoint

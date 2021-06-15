@@ -14,8 +14,3 @@ func RegisterIpams() map[string]Ipam {
 		"whereabouts": NewWhereAboutsIpam(),
 	}
 }
-
-// GetKernelSupportedCnis -  Returns a list with the supported Kernel CNIs
-func GetKernelSupportedCnis() []string {
-	return []string{"ovs", "host-device"}
-}

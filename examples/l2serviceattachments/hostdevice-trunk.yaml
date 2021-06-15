@@ -15,6 +15,4 @@ spec:
     - "l2service-nineteen"
     - "l2service-twenty"
   ConnectionPoint: "cp-virtio"
-  PodInterfaceType: "kernel"
-  Implementation: "host-device"
   VlanType: "trunk"

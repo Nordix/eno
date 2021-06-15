@@ -1,6 +1,7 @@
 package l2serviceattachmentparser
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/Nordix/eno/pkg/cni"
 	"github.com/Nordix/eno/pkg/common"
 	"github.com/Nordix/eno/pkg/config"
-	"github.com/Nordix/eno/pkg/connectionpointparser"
 	"github.com/go-logr/logr"
 )
 
@@ -45,10 +45,6 @@ func NewL2SrvAttParser(srvAttObj *enov1alpha1.L2ServiceAttachment, l2srvObjs []*
 
 // ParseL2ServiceAttachment - parses a L2ServiceAttachment Resource
 func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(data map[string]interface{}) (string, string, error) {
-	// Initiate Parsers
-	cpParser := connectionpointparser.NewCpParser(sattp.cpResource, sattp.log)
-	// Parse ConnectionPoint object
-	cpParser.ParseConnectionPoint(data)
 	cniManifestFile, err := sattp.populateCni(data)
 	if err != nil {
 		sattp.log.Error(err, "Error occurred while populating cni")
@@ -66,13 +62,27 @@ func (sattp *L2SrvAttParser) ParseL2ServiceAttachment(data map[string]interface{
 }
 
 func (sattp *L2SrvAttParser) populateCni(data map[string]interface{}) (string, error) {
-	cniToUse, err := sattp.pickCni()
-	if err != nil {
+
+	if err := sattp.validateCpSupportedCnis(); err != nil {
+		sattp.log.Error(err, "Error occurred while validating ConnectionPoint's supported CNIs")
+		return "", err
+	}
+	if err := sattp.pickCni(); err != nil {
 		sattp.log.Error(err, "Error occurred while picking cni")
 		return "", err
 	}
-	cniObj := sattp.cniMapping[cniToUse]
-	cniConfigObj := sattp.instantiateCniConfig()
+
+	cniObj, ok := sattp.cniMapping[sattp.srvAttResource.Spec.Implementation]
+	if !ok {
+		err := fmt.Errorf("The %s is not supported by ENO yet", sattp.srvAttResource.Spec.Implementation)
+		sattp.log.Error(err, "")
+		return "", err
+	}
+	cniConfigObj, err := sattp.instantiateCniConfig()
+	if err != nil {
+		sattp.log.Error(err, "Error occured while instantiating cni config")
+		return "", err
+	}
 	cniManifestFile, err := cniObj.HandleCni(cniConfigObj, data)
 	if err != nil {
 		sattp.log.Error(err, "Error occured while handling cni")
@@ -115,40 +125,94 @@ func (sattp *L2SrvAttParser) populateIpam(data map[string]interface{}) (string, 
 	return ipamManifestFile, nil
 }
 
-// pickCni - pick the CNI to be used for net-attach-def
-func (sattp *L2SrvAttParser) pickCni() (string, error) {
-	var cniToUse string
+// validateCpSupportedCnis - validate the SupportedCnis list in CP CR
+func (sattp *L2SrvAttParser) validateCpSupportedCnis() error {
+	var supportedCniUniqueness []string
 
-	// Default case - No CNI has been specified
-	if sattp.srvAttResource.Spec.Implementation == "" {
-		if sattp.srvAttResource.Spec.PodInterfaceType == "kernel" {
-			cniToUse = sattp.config.KernelCni
-		} else {
-			err := errors.New("We do not support default Cnis for PodInterfaceType=dpdk currenlty ")
-			sattp.log.Error(err, "Error occured while picking cni to use")
-			return "", err
+	//Check uniqueness of the SupportedCni Items
+	for _, supportedCni := range sattp.cpResource.Spec.SupportedCnis {
+		if common.SearchInSlice(supportedCni.Name, supportedCniUniqueness) {
+			err := errors.New("SupportedCni items must be unique")
+			return err
 		}
-	} else {
-		if sattp.srvAttResource.Spec.PodInterfaceType == "kernel" {
-			if !common.SearchInSlice(sattp.srvAttResource.Spec.Implementation, cni.GetKernelSupportedCnis()) {
-				err := fmt.Errorf(" %s cni is not supported currently", sattp.srvAttResource.Spec.Implementation)
-				sattp.log.Error(err, "Error occured while picking cni to use")
-				return "", err
+		supportedCniUniqueness = append(supportedCniUniqueness, supportedCni.Name)
+
+		// Check if the Supported Interface types are unique and valid
+		supportedInterfaceTypesUniqueness := []string{}
+
+		for _, supportedInterfaceType := range supportedCni.SupportedInterfaceTypes {
+
+			if common.SearchInSlice(supportedInterfaceType, supportedInterfaceTypesUniqueness) {
+				err := errors.New("SupportedInterfaceTypes items must be unique")
+				return err
 			}
-			cniToUse = sattp.srvAttResource.Spec.Implementation
-		} else {
-			err := errors.New("We do not support Cnis for PodInterfaceType=dpdk currenlty ")
-			sattp.log.Error(err, "Error occured while picking cni to use")
-			return "", err
+
+			if !common.SearchInSlice(supportedInterfaceType, common.GetValidInterfaceTypes()) {
+				err := fmt.Errorf(" %s is not a valid interface type", supportedInterfaceType)
+				return err
+			}
+
+			supportedInterfaceTypesUniqueness = append(supportedInterfaceTypesUniqueness, supportedInterfaceType)
 		}
 	}
-	return cniToUse, nil
+
+	return nil
+}
+
+// pickCni - pick the CNI to be used for net-attach-def
+func (sattp *L2SrvAttParser) pickCni() error {
+	if sattp.srvAttResource.Spec.Implementation == "" {
+		// No CNI has been specified
+		if sattp.srvAttResource.Spec.PodInterfaceType == "" {
+			sattp.srvAttResource.Spec.Implementation = sattp.cpResource.Spec.SupportedCnis[0].Name
+			sattp.srvAttResource.Spec.PodInterfaceType = sattp.cpResource.Spec.SupportedCnis[0].SupportedInterfaceTypes[0]
+			return nil
+		} else {
+			for _, supportedCni := range sattp.cpResource.Spec.SupportedCnis {
+				if common.SearchInSlice(sattp.srvAttResource.Spec.PodInterfaceType, supportedCni.SupportedInterfaceTypes) {
+					sattp.srvAttResource.Spec.Implementation = supportedCni.Name
+					return nil
+				}
+			}
+
+			err := fmt.Errorf(" %s interface type is not supported by the supported CNIs", sattp.srvAttResource.Spec.PodInterfaceType)
+			return err
+		}
+	}
+	// CNI has been specified
+	for _, supportedCni := range sattp.cpResource.Spec.SupportedCnis {
+		if sattp.srvAttResource.Spec.Implementation == supportedCni.Name {
+			if sattp.srvAttResource.Spec.PodInterfaceType == "" {
+				sattp.srvAttResource.Spec.PodInterfaceType = supportedCni.SupportedInterfaceTypes[0]
+				return nil
+			} else {
+				if common.SearchInSlice(sattp.srvAttResource.Spec.PodInterfaceType, supportedCni.SupportedInterfaceTypes) {
+					return nil
+				}
+
+				err := fmt.Errorf(" %s interface type is not supported by %s CNI", sattp.srvAttResource.Spec.PodInterfaceType,
+					sattp.srvAttResource.Spec.Implementation)
+				return err
+			}
+		}
+	}
+	err := fmt.Errorf(" %s CNI is not supported by the supported CNIs", sattp.srvAttResource.Spec.Implementation)
+	return err
 }
 
 // instantiateCniConfig - Instantiate the CniConfig object to be used
-func (sattp *L2SrvAttParser) instantiateCniConfig() *cniconfig.CniConfig {
+func (sattp *L2SrvAttParser) instantiateCniConfig() (*cniconfig.CniConfig, error) {
 	segIds := sattp.getSegIds()
-	return cniconfig.NewCniConfig(segIds, sattp.srvAttResource.Spec.VlanType, sattp.log)
+	cniOptions, err := sattp.getCniOptions()
+	if err != nil {
+		sattp.log.Error(err, "")
+		return nil, err
+	}
+	return cniconfig.NewCniConfig(segIds,
+		sattp.srvAttResource.Spec.VlanType,
+		sattp.srvAttResource.Spec.PodInterfaceType,
+		cniOptions,
+		sattp.log), nil
 }
 
 // instantiateIpamConfig - Instantiate the IpamConfig object to be used
@@ -163,4 +227,28 @@ func (sattp *L2SrvAttParser) getSegIds() []uint16 {
 		tmpslice = append(tmpslice, l2srvObj.Spec.SegmentationID)
 	}
 	return tmpslice
+}
+
+// getCniOptions - Returns a map or an error of the picked CNI Opts
+func (sattp *L2SrvAttParser) getCniOptions() (map[string]interface{}, error) {
+	rawCniOptions := make(map[string]interface{})
+
+	for _, supportedCni := range sattp.cpResource.Spec.SupportedCnis {
+		if sattp.srvAttResource.Spec.Implementation == supportedCni.Name {
+			if supportedCni.Opts != "" {
+				optionsBytes := []byte(supportedCni.Opts)
+				err := json.Unmarshal(optionsBytes, &rawCniOptions)
+				if err != nil {
+					sattp.log.Error(err, "")
+					return nil, err
+				}
+				return rawCniOptions, nil
+			}
+
+			return rawCniOptions, nil
+		}
+	}
+	err := errors.New("Error occured while getting Cni Opts")
+	return nil, err
+
 }

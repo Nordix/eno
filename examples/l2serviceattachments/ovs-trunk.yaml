@@ -10,6 +10,4 @@ spec:
     - "l2service-fifteen"
     - "l2service-sixteen"
   ConnectionPoint: "cp-br-trunk"
-  PodInterfaceType: "kernel"
-  Implementation: "ovs"
   VlanType: "trunk"

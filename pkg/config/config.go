@@ -2,22 +2,17 @@ package config
 
 import (
 	"errors"
-	"fmt"
-	"io/ioutil"
-
-	"github.com/Nordix/eno/pkg/cni"
-	"github.com/Nordix/eno/pkg/common"
-
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
 )
 
 const (
-	defaultKernelCni = "ovs"
+	defaultUseFabricPlugin = false
 )
 
 // Configuration instance
 type Configuration struct {
-	KernelCni string `yaml:"KernelCni"`
+	UseFabricPlugin bool `yaml:"UseFabricPlugin"`
 }
 
 // NewConfiguration - creates instance of Configuration
@@ -53,8 +48,8 @@ func (c *Configuration) addDefault() error {
 		return err
 	}
 
-	if c.KernelCni == "" {
-		c.KernelCni = defaultKernelCni
+	if !c.UseFabricPlugin {
+		c.UseFabricPlugin = defaultUseFabricPlugin
 	}
 	return nil
 }
@@ -62,11 +57,6 @@ func (c *Configuration) addDefault() error {
 func (c *Configuration) validateConfiguration() error {
 	if c == nil {
 		err := errors.New("Pointer to Configuration instance is nil")
-		return err
-	}
-
-	if !common.SearchInSlice(c.KernelCni, cni.GetKernelSupportedCnis()) {
-		err := fmt.Errorf(" %s cni is not supported currently", c.KernelCni)
 		return err
 	}
 

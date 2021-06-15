@@ -3,7 +3,10 @@ kind: ConnectionPoint
 metadata:
   name: cp-br-trunk
 spec:
-  Type: "kernel"
-  NodePool: "ovs-pool"
-  PhysicalNet: "ovs-physnet-two"
-  InterfaceName: "br-trunk"
+  Description: "Represents the br-trunk OvS bridge"
+  SupportedCnis:
+    - Name: "ovs"
+      SupportedInterfaceTypes: ["kernel"]
+      Opts: '{
+        "BridgeName": "br-trunk"
+        }'

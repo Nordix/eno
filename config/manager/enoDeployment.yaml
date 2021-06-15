@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
+    plugin-plane: fabric-plugin
     control-plane: controller-manager
   name: system
 ---

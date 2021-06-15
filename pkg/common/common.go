@@ -9,3 +9,8 @@ func SearchInSlice(str string, list []string) bool {
 	}
 	return false
 }
+
+// GetValidInterfaceTypes - Returns the valid interface types that ENO supports
+func GetValidInterfaceTypes() []string {
+	return []string{"kernel", "dpdk"}
+}

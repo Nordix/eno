@@ -1,0 +1,10 @@
+domain: k8s.io
+layout: go.kubebuilder.io/v2
+repo: github.com/Nordix/eno
+resources:
+- group: eno
+  kind: L2BridgeDomain
+  version: v1alpha1
+version: 3-alpha
+plugins:
+  go.operator-sdk.io/v2-alpha: {}
