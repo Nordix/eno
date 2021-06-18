@@ -3,62 +3,61 @@ kind: ConfigMap
 metadata:
   name: ovs-fabric-plugin-fabric-conf
   namespace: system
-  #namespace: test
 data:
   links: |
     - hostname: master0
-      interfaceName: ens3
+      interfaceName: ens2
       switchName: br_admin
-      switchPort: vnet8
+      switchPort: vport3
+    - hostname: master0
+      interfaceName: ens3
+      switchName: br_public
+      switchPort: vport4
     - hostname: master0
       interfaceName: ens4
-      switchName: br_public
-      switchPort: vnet9
+      switchName: br_mgmt
+      switchPort: vport5
     - hostname: master0
       interfaceName: ens5
-      switchName: br_mgmt
-      switchPort: vnet10
-    - hostname: master0
-      interfaceName: ens6
       switchName: br_neutron
-      switchPort: vnet11
+      switchPort: vport6
     - hostname: master0
       interfaceName: ens26
       switchName: br-fabric
-      switchPort: vnet12
+      switchPort: vport7
     - hostname: master0
       interfaceName: ens27
       switchName: br-fabric
-      switchPort: vnet13
+      switchPort: vport8
+    - hostname: node0
+      interfaceName: ens2
+      switchName: br_admin
+      switchPort: vport9
     - hostname: node0
       interfaceName: ens3
-      switchName: br_admin
-      switchPort: vnet0
+      switchName: br_public
+      switchPort: vport10
     - hostname: node0
       interfaceName: ens4
-      switchName: br_public
-      switchPort: vnet1
+      switchName: br_mgmt
+      switchPort: vport11
     - hostname: node0
       interfaceName: ens5
-      switchName: br_mgmt
-      switchPort: vnet2
-    - hostname: node0
-      interfaceName: ens6
       switchName: br_neutron
-      switchPort: vnet3
+      switchPort: vport12
     - hostname: node0
       interfaceName: ens10
       switchName: br-fabric
-      switchPort: vnet4
+      switchPort: vport13
     - hostname: node0
       interfaceName: ens11
       switchName: br-fabric
-      switchPort: vnet5
+      switchPort: vport14
     - hostname: node0
       interfaceName: ens12
       switchName: br-fabric
-      switchPort: vnet6
+      switchPort: vport15
     - hostname: node0
       interfaceName: ens13
       switchName: br-fabric
-      switchPort: vnet7
+      switchPort: vport16

@@ -3,13 +3,15 @@ kind: ConfigMap
 metadata:
   name: ovs-fabric-plugin-pool-conf
   namespace: system
-  #namespace: test
 data:
   nodePools: |
     - poolConf:
         name: ovs-pool
         netConf:
           interfaces:
+            - name: ens2
+              type: ethernet
+              state: up
             - name: ens3
               type: ethernet
               state: up
@@ -17,23 +19,23 @@ data:
               type: ethernet
               state: up
             - name: ens5
-              type: ethernet
-              state: up
-            - name: ens6
               type: ethernet
               state: up
             - name: ens26
               type: ethernet
               state: up
-              connectionPoint: cp-br-data
+              connectionPoint: cp-br-trunk
             - name: ens27
               type: ethernet
               state: up
-              connectionPoint: cp-br-trunk
+              connectionPoint: cp-br-data
     - poolConf:
         name: virtio-pool
         netConf:
           interfaces:
+            - name: ens2
+              type: ethernet
+              state: up
             - name: ens3
               type: ethernet
               state: up
@@ -41,9 +43,6 @@ data:
               type: ethernet
               state: up
             - name: ens5
-              type: ethernet
-              state: up
-            - name: ens6
               type: ethernet
               state: up
             - name: ens10
