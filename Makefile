@@ -55,6 +55,27 @@ deploy: manifests kustomize
 undeploy: manifests kustomize
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
+# create eno k8s resources
+create-eno-resources: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default > deployment/resources.yaml
+
+# Setup ENO
+eno-setup:
+	cp deployment/resources.yaml . && ./scripts/gen-certs.sh && kubectl apply -f resources.yaml && rm -rf resources.yaml
+
+# Teardown ENO
+eno-teardown:
+	cat deployment/resources.yaml | kubectl delete -f -
+
+#Setup ovs-plugin
+ovs-plugin-setup:
+	cat fabric-plugins/ovs-plugin/deployment/resources.yaml | kubectl apply -f -
+
+#Teardown ovs-plugin
+ovs-plugin-teardown:
+	cat fabric-plugins/ovs-plugin/deployment/resources.yaml | kubectl delete -f -
+
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
@@ -75,8 +96,15 @@ generate: controller-gen
 #docker-build: test
 #	docker build . -t ${IMG}
 
-docker-build:
+#docker-build:
+	#docker build . -t ${IMG}
+
+eno-docker-build:
 	docker build . -t ${IMG}
+
+ovs-plugin-docker-build:
+	cd fabric-plugins/ovs-plugin && docker build . -t ovs-fabric-plugin:latest && cd ../..
+
 
 # Push the docker image
 docker-push:

@@ -1,0 +1,341 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: eno-ovs-fabric-plugin-leader-election-role
+  namespace: eno-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: eno-ovs-fabric-plugin-manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - connectionpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - l2bridgedomains
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eno.k8s.io
+  resources:
+  - l2bridgedomains/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: eno-ovs-fabric-plugin-proxy-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: eno-ovs-fabric-plugin-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: eno-ovs-fabric-plugin-leader-election-rolebinding
+  namespace: eno-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: eno-ovs-fabric-plugin-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: eno-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eno-ovs-fabric-plugin-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: eno-ovs-fabric-plugin-manager-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: eno-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eno-ovs-fabric-plugin-proxy-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: eno-ovs-fabric-plugin-proxy-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: eno-system
+---
+apiVersion: v1
+data:
+  links: |
+    - hostname: master0
+      interfaceName: ens2
+      switchName: br_admin
+      switchPort: vport3
+    - hostname: master0
+      interfaceName: ens3
+      switchName: br_public
+      switchPort: vport4
+    - hostname: master0
+      interfaceName: ens4
+      switchName: br_mgmt
+      switchPort: vport5
+    - hostname: master0
+      interfaceName: ens5
+      switchName: br_neutron
+      switchPort: vport6
+    - hostname: master0
+      interfaceName: ens26
+      switchName: br-fabric
+      switchPort: vport7
+    - hostname: master0
+      interfaceName: ens27
+      switchName: br-fabric
+      switchPort: vport8
+    - hostname: node0
+      interfaceName: ens2
+      switchName: br_admin
+      switchPort: vport9
+    - hostname: node0
+      interfaceName: ens3
+      switchName: br_public
+      switchPort: vport10
+    - hostname: node0
+      interfaceName: ens4
+      switchName: br_mgmt
+      switchPort: vport11
+    - hostname: node0
+      interfaceName: ens5
+      switchName: br_neutron
+      switchPort: vport12
+    - hostname: node0
+      interfaceName: ens10
+      switchName: br-fabric
+      switchPort: vport13
+    - hostname: node0
+      interfaceName: ens11
+      switchName: br-fabric
+      switchPort: vport14
+    - hostname: node0
+      interfaceName: ens12
+      switchName: br-fabric
+      switchPort: vport15
+    - hostname: node0
+      interfaceName: ens13
+      switchName: br-fabric
+      switchPort: vport16
+kind: ConfigMap
+metadata:
+  name: eno-ovs-fabric-plugin-fabric-conf
+  namespace: eno-system
+---
+apiVersion: v1
+data:
+  nodePools: |
+    - poolConf:
+        name: ovs-pool
+        netConf:
+          interfaces:
+            - name: ens2
+              type: ethernet
+              state: up
+            - name: ens3
+              type: ethernet
+              state: up
+            - name: ens4
+              type: ethernet
+              state: up
+            - name: ens5
+              type: ethernet
+              state: up
+            - name: ens26
+              type: ethernet
+              state: up
+              connectionPoint: cp-br-trunk
+            - name: ens27
+              type: ethernet
+              state: up
+              connectionPoint: cp-br-data
+    - poolConf:
+        name: virtio-pool
+        netConf:
+          interfaces:
+            - name: ens2
+              type: ethernet
+              state: up
+            - name: ens3
+              type: ethernet
+              state: up
+            - name: ens4
+              type: ethernet
+              state: up
+            - name: ens5
+              type: ethernet
+              state: up
+            - name: ens10
+              type: ethernet
+              state: up
+              connectionPoint: cp-virtio
+            - name: ens11
+              type: ethernet
+              state: up
+              connectionPoint: cp-virtio
+            - name: ens12
+              type: ethernet
+              state: up
+              connectionPoint: cp-virtio
+            - name: ens13
+              type: ethernet
+              state: up
+              connectionPoint: cp-virtio
+kind: ConfigMap
+metadata:
+  name: eno-ovs-fabric-plugin-pool-conf
+  namespace: eno-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    plugin-plane: fabric-plugin
+  name: eno-ovs-fabric-plugin-metrics-service
+  namespace: eno-system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    plugin-plane: fabric-plugin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    plugin-plane: fabric-plugin
+  name: eno-ovs-fabric-plugin
+  namespace: eno-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      plugin-plane: fabric-plugin
+  template:
+    metadata:
+      labels:
+        plugin-plane: fabric-plugin
+    spec:
+      containers:
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+      - args:
+        - --metrics-addr=127.0.0.1:8080
+        - --enable-leader-election
+        command:
+        - /manager
+        env:
+        - name: FABRIC_PLUGIN_NAMESPACE
+          value: eno-system
+        - name: POOL_CONFIGMAP_NAME
+          value: eno-ovs-fabric-plugin-pool-conf
+        - name: FABRIC_CONFIGMAP_NAME
+          value: eno-ovs-fabric-plugin-fabric-conf
+        - name: FABRIC_OVS_IP
+          value: 10.2.0.1
+        - name: FABRIC_OVS_PORT
+          value: "6640"
+        image: ovs-fabric-plugin:latest
+        imagePullPolicy: Never
+        name: manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      terminationGracePeriodSeconds: 10
