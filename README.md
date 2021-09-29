@@ -11,8 +11,8 @@ More information regarding Cloud Infra Engine can be found [here](https://docs.n
 
 - Linux Distribution: Ubuntu 1804
 - Minimum no of cores: 10
-- Minimum RAM: 14G
-- Minimum Disk Space: 150G
+- Minimum RAM: 16G
+- Minimum Disk Space: 350G
   
 ### Deploy ENO scenario
 
