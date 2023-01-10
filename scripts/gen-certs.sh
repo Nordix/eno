@@ -10,7 +10,7 @@ mkdir -p /tmp/eno-certs
 pushd /tmp/eno-certs
 
 
-openssl req -nodes -x509 -newkey rsa:2048 -keyout ca.key -out ca.crt -subj "/C=EN/ST=Eno/L=Eno/O=Eno/CN=eno" &>/dev/null
+openssl req -nodes -x509 -newkey rsa:2048 -keyout ca.key -out ca.crt -days 10000 -subj "/C=EN/ST=Eno/L=Eno/O=Eno/CN=eno" &>/dev/null
 openssl req -nodes -newkey rsa:2048 -keyout server.key -out server.csr -subj "/C=EN/ST=Eno/L=Eno/O=Eno/CN=eno" &>/dev/null
 
 
